@@ -36,7 +36,7 @@ namespace YoutubeCollections
 
             try
             {
-                YoutubeWrapper.PrintChannelSubscriptions(theVibeGuide);
+                YoutubeWrapper.PrintChannelSubscriptions(myChannel);
             }
             catch (AggregateException ex)
             {
