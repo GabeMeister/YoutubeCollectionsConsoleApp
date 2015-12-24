@@ -15,12 +15,14 @@ namespace YoutubeCollections
 {
     public class YoutubeWrapper
     {
-        public static void PrintChannelUploads(string channelId)
+        public delegate void FollowUp(string id, FollowUp followUp = null);
+
+        public static void PrintChannelUploads(string channelId, FollowUp followUp = null)
         {
             int vidCount = 0;
             ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails");
 
-            Console.WriteLine("Channel Name: " + channel.Items[0].Snippet.Title);
+            Console.WriteLine("************* Channel Name: " + channel.Items[0].Snippet.Title + "*************");
 
             string nextPageToken = string.Empty;
             string uploadsPlaylistId = channel.Items[0].ContentDetails.RelatedPlaylists.Uploads;
@@ -36,7 +38,15 @@ namespace YoutubeCollections
                 {
                     foreach (var searchResult in searchListResponse.Items)
                     {
-                        Console.WriteLine(searchResult.Snippet.Title);
+                        if (followUp != null)
+                        {
+                            followUp(searchResult.Snippet.Title);
+                        }
+                        else
+                        {
+                            Console.WriteLine(searchResult.Snippet.Title);
+                        }
+                        
                     }
                 }
             }
@@ -46,7 +56,7 @@ namespace YoutubeCollections
 
         }
 
-        public static void PrintChannelSubscriptions(string channelId)
+        public static void PrintChannelSubscriptions(string channelId, FollowUp followUp = null)
         {
             // NOTE: cannot view other channel subscriptions
 
@@ -64,13 +74,26 @@ namespace YoutubeCollections
                 {
                     foreach (var searchResult in subscriptionsList.Items)
                     {
-                        Console.WriteLine(searchResult.Snippet.Title);
+                        
+                        if (followUp != null)
+                        {
+                            followUp(searchResult.Snippet.ResourceId.ChannelId, PrintInfo);
+                        }
+                        else
+                        {
+                            Console.WriteLine(searchResult.Snippet.Title);
+                        }
                     }
                 }
             }
             while (nextPageToken != null);
 
             Console.WriteLine("Total Subscription Count: " + subscriptionCount);
+        }
+
+        private static void PrintInfo(string strToPrint, FollowUp followUp)
+        {
+            Console.WriteLine(strToPrint);
         }
     }
 }

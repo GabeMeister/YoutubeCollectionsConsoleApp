@@ -36,7 +36,8 @@ namespace YoutubeCollections
 
             try
             {
-                YoutubeWrapper.PrintChannelSubscriptions(myChannel);
+                YoutubeWrapper.PrintChannelSubscriptions(myChannel, YoutubeWrapper.PrintChannelUploads);
+                //YoutubeWrapper.PrintChannelSubscriptions(myChannel);
             }
             catch (AggregateException ex)
             {
