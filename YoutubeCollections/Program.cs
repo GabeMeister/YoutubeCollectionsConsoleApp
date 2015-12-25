@@ -26,6 +26,7 @@ namespace YoutubeCollections
         static string myChannel = "UC4LVLoBN0xbOb5xJuA0ia9A";
         static string xKito = "UCMOgdURr7d8pOVlc-alkfRg";
         static string theVibeGuide = "UCxH0sQJKG6Aq9-vFIPnDZ2A";
+        static string NoCopyrightSounds = "UC_aEa8K-EOJ3D6gOs7HcyNg";
 
         [STAThread]
         static void Main(string[] args)
@@ -36,8 +37,8 @@ namespace YoutubeCollections
 
             try
             {
-                YoutubeWrapper.PrintChannelSubscriptions(myChannel, YoutubeWrapper.PrintChannelUploads);
-                //YoutubeWrapper.PrintChannelSubscriptions(myChannel);
+                //YoutubeWrapper.FetchChannelSubscriptions(myChannel);
+                YoutubeWrapper.FetchChannelUploads(NoCopyrightSounds);
             }
             catch (AggregateException ex)
             {

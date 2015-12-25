@@ -15,48 +15,9 @@ namespace YoutubeCollections
 {
     public class YoutubeWrapper
     {
-        public delegate void FollowUp(string id, FollowUp followUp = null);
+        private const int MAX_RESULTS = 50;
 
-        public static void PrintChannelUploads(string channelId, FollowUp followUp = null)
-        {
-            int vidCount = 0;
-            ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails");
-
-            Console.WriteLine("************* Channel Name: " + channel.Items[0].Snippet.Title + "*************");
-
-            string nextPageToken = string.Empty;
-            string uploadsPlaylistId = channel.Items[0].ContentDetails.RelatedPlaylists.Uploads;
-            PlaylistItemListResponse searchListResponse;
-
-            do
-            {
-                searchListResponse = YoutubeApiHandler.FetchPlaylistVideosById(uploadsPlaylistId, nextPageToken, "snippet");
-                vidCount += searchListResponse.Items.Count;
-                nextPageToken = searchListResponse.NextPageToken;
-
-                if (searchListResponse != null)
-                {
-                    foreach (var searchResult in searchListResponse.Items)
-                    {
-                        if (followUp != null)
-                        {
-                            followUp(searchResult.Snippet.Title);
-                        }
-                        else
-                        {
-                            Console.WriteLine(searchResult.Snippet.Title);
-                        }
-                        
-                    }
-                }
-            }
-            while (nextPageToken != null);
-
-            Console.WriteLine("Total Video Count: " + vidCount);
-
-        }
-
-        public static void PrintChannelSubscriptions(string channelId, FollowUp followUp = null)
+        public static void FetchChannelSubscriptions(string channelId)
         {
             // NOTE: cannot view other channel subscriptions
 
@@ -74,15 +35,7 @@ namespace YoutubeCollections
                 {
                     foreach (var searchResult in subscriptionsList.Items)
                     {
-                        
-                        if (followUp != null)
-                        {
-                            followUp(searchResult.Snippet.ResourceId.ChannelId, PrintInfo);
-                        }
-                        else
-                        {
-                            Console.WriteLine(searchResult.Snippet.Title);
-                        }
+                        FetchChannelUploads(searchResult.Snippet.ResourceId.ChannelId);
                     }
                 }
             }
@@ -91,7 +44,68 @@ namespace YoutubeCollections
             Console.WriteLine("Total Subscription Count: " + subscriptionCount);
         }
 
-        private static void PrintInfo(string strToPrint, FollowUp followUp)
+        public static void FetchChannelUploads(string channelId)
+        {
+            int vidCount = 0;
+            ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails");
+
+            Console.WriteLine("************* " + channel.Items[0].Snippet.Title + " | " + channel.Items[0].Id + " *************");
+
+            string nextPageToken = string.Empty;
+            string uploadsPlaylistId = channel.Items[0].ContentDetails.RelatedPlaylists.Uploads;
+            PlaylistItemListResponse searchListResponse;
+
+            do
+            {
+                searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
+                vidCount += searchListResponse.Items.Count;
+                nextPageToken = searchListResponse.NextPageToken;
+
+                if (searchListResponse != null)
+                {
+                    string videoIds = string.Empty;
+
+                    if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
+                    {
+                        foreach (var searchResult in searchListResponse.Items)
+                        {
+                            videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
+                        }
+
+                        // Remove last comma
+                        videoIds = videoIds.Substring(0, videoIds.Length - 1);
+
+                        FetchVideoInfo(videoIds);
+                    }
+                    
+                }
+            }
+            while (nextPageToken != null);
+
+            Console.WriteLine("Total Video Count: " + vidCount);
+
+        }
+
+        public static void FetchVideoInfo(string videoIds)
+        {
+            VideoListResponse videos = YoutubeApiHandler.FetchVideoById(videoIds, "snippet,contentDetails,statistics");
+
+            foreach(var video in videos.Items)
+            {
+                Console.WriteLine("====================");
+                Console.WriteLine(video.Snippet.Title);
+                Console.WriteLine(video.Snippet.ChannelTitle);
+                Console.WriteLine(video.Snippet.Thumbnails.Medium.Url);
+                Console.WriteLine(video.ContentDetails.Duration);
+                Console.WriteLine(video.Statistics.ViewCount);
+                
+            }
+            
+        }
+
+        
+
+        private static void PrintInfo(string strToPrint)
         {
             Console.WriteLine(strToPrint);
         }

@@ -16,25 +16,14 @@ namespace YoutubeCollections
     public class YoutubeApiHandler
     {
         private static string API_KEY = "AIzaSyD3PMEr28Ic6lIRisjCQZ1JO98aqHWLpR4";
-
-        public static PlaylistItemListResponse FetchPlaylistVideosById(string playlistId, string pageToken, string part)
-        {
-            var ytService = FetchYoutubeService();
-
-            PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
-            playlistRequest.MaxResults = 50;
-            playlistRequest.PlaylistId = playlistId;
-            playlistRequest.PageToken = pageToken;
-
-            return playlistRequest.Execute();
-        }
+        private const int MAX_RESULTS = 50;
 
         public static ChannelListResponse FetchUploadsPlaylistByChannel(string channelId, string part)
         {
             var ytService = FetchYoutubeService();
 
             ChannelsResource.ListRequest channelRequest = ytService.Channels.List(part);
-            channelRequest.MaxResults = 50;
+            channelRequest.MaxResults = MAX_RESULTS;
             channelRequest.Id = channelId;
 
             ChannelListResponse channelResponse = channelRequest.Execute();
@@ -47,7 +36,7 @@ namespace YoutubeCollections
             var ytService = FetchYoutubeService();
 
             SubscriptionsResource.ListRequest subscriptionRequest = ytService.Subscriptions.List(part);
-            subscriptionRequest.MaxResults = 50;
+            subscriptionRequest.MaxResults = MAX_RESULTS;
             subscriptionRequest.PageToken = pageToken;
             subscriptionRequest.ChannelId = channelId;
 
@@ -57,6 +46,31 @@ namespace YoutubeCollections
 
         }
 
+        public static PlaylistItemListResponse FetchVideosByPlaylist(string playlistId, string pageToken, string part)
+        {
+            var ytService = FetchYoutubeService();
+
+            PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
+            playlistRequest.MaxResults = MAX_RESULTS;
+            playlistRequest.PlaylistId = playlistId;
+            playlistRequest.PageToken = pageToken;
+
+            return playlistRequest.Execute();
+        }
+
+        public static VideoListResponse FetchVideoById(string videoId, string part)
+        {
+            var ytService = FetchYoutubeService();
+
+            VideosResource.ListRequest videoRequest = ytService.Videos.List(part);
+            videoRequest.MaxResults = MAX_RESULTS;
+            videoRequest.Id = videoId;
+
+            return videoRequest.Execute();
+        }
+        
+
+        
 
 
 
