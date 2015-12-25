@@ -10,6 +10,7 @@ using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using System.Xml;
 
 namespace YoutubeCollections
 {
@@ -77,7 +78,7 @@ namespace YoutubeCollections
 
                         FetchVideoInfo(videoIds);
                     }
-                    
+
                 }
             }
             while (nextPageToken != null);
@@ -96,9 +97,8 @@ namespace YoutubeCollections
                 Console.WriteLine(video.Snippet.Title);
                 Console.WriteLine(video.Snippet.ChannelTitle);
                 Console.WriteLine(video.Snippet.Thumbnails.Medium.Url);
-                Console.WriteLine(video.ContentDetails.Duration);
+                Console.WriteLine(XmlConvert.ToTimeSpan(video.ContentDetails.Duration).ToString());
                 Console.WriteLine(video.Statistics.ViewCount);
-                
             }
             
         }

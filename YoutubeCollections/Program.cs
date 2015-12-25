@@ -31,14 +31,14 @@ namespace YoutubeCollections
         [STAThread]
         static void Main(string[] args)
         {
-            Console.WriteLine("YouTube Data API: My Uploads");
+            Console.WriteLine("YouTube Data API");
             Console.WriteLine("============================");
             
 
             try
             {
-                //YoutubeWrapper.FetchChannelSubscriptions(myChannel);
-                YoutubeWrapper.FetchChannelUploads(NoCopyrightSounds);
+                YoutubeWrapper.FetchChannelSubscriptions(myChannel);
+                //YoutubeWrapper.FetchChannelUploads(NoCopyrightSounds);
             }
             catch (AggregateException ex)
             {
