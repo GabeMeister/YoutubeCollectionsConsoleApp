@@ -48,9 +48,10 @@ namespace YoutubeCollections
         public static void FetchChannelUploads(string channelId)
         {
             int vidCount = 0;
-            ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails");
+            ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails,statistics");
 
             Console.WriteLine("************* " + channel.Items[0].Snippet.Title + " | " + channel.Items[0].Id + " *************");
+
 
             string nextPageToken = string.Empty;
             string uploadsPlaylistId = channel.Items[0].ContentDetails.RelatedPlaylists.Uploads;

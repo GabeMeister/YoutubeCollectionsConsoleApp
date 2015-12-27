@@ -37,8 +37,8 @@ namespace YoutubeCollections
 
             try
             {
-                YoutubeWrapper.FetchChannelSubscriptions(myChannel);
-                //YoutubeWrapper.FetchChannelUploads(NoCopyrightSounds);
+                //YoutubeWrapper.FetchChannelSubscriptions(myChannel);
+                YoutubeWrapper.FetchChannelUploads(NoCopyrightSounds);
             }
             catch (AggregateException ex)
             {
