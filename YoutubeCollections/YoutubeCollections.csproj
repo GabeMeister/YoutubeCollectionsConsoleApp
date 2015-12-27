@@ -111,10 +111,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Database\YoutubeObjects\Channel.cs" />
-    <Compile Include="Database\YoutubeObjects\Collection.cs" />
-    <Compile Include="Database\YoutubeObjects\User.cs" />
-    <Compile Include="Database\YoutubeObjects\Video.cs" />
+    <Compile Include="Database\ApiToDatabase.cs" />
+    <Compile Include="Database\DBUtil.cs" />
+    <Compile Include="Database\SqlConst.cs" />
+    <Compile Include="Database\YoutubeObjects\ChannelHolder.cs" />
+    <Compile Include="Database\YoutubeObjects\CollectionHolder.cs" />
+    <Compile Include="Database\YoutubeObjects\UserHolder.cs" />
+    <Compile Include="Database\YoutubeObjects\VideoHolder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Api\YoutubeApiHandler.cs" />

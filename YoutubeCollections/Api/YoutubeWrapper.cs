@@ -11,6 +11,8 @@ using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System.Xml;
+using YoutubeCollections.Database;
+using YoutubeCollections.Database.YoutubeObjects;
 
 namespace YoutubeCollections
 {
@@ -48,43 +50,44 @@ namespace YoutubeCollections
         public static void FetchChannelUploads(string channelId)
         {
             int vidCount = 0;
-            ChannelListResponse channel = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails,statistics");
+            ChannelListResponse channelResponse = YoutubeApiHandler.FetchUploadsPlaylistByChannel(channelId, "snippet,contentDetails,statistics");
+            ChannelHolder channel = ApiToDatabase.ConvertToChannelHolder(channelResponse);
+            YoutubeDatabaseHandler.InsertChannel(channel);
 
-            Console.WriteLine("************* " + channel.Items[0].Snippet.Title + " | " + channel.Items[0].Id + " *************");
+            Console.WriteLine("************* " + channel.Title + " | " + channel.YoutubeId + " *************");
 
+            //string nextPageToken = string.Empty;
+            //string uploadsPlaylistId = channelResponse.Items[0].ContentDetails.RelatedPlaylists.Uploads;
+            //PlaylistItemListResponse searchListResponse;
 
-            string nextPageToken = string.Empty;
-            string uploadsPlaylistId = channel.Items[0].ContentDetails.RelatedPlaylists.Uploads;
-            PlaylistItemListResponse searchListResponse;
+            //do
+            //{
+            //    searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
+            //    vidCount += searchListResponse.Items.Count;
+            //    nextPageToken = searchListResponse.NextPageToken;
 
-            do
-            {
-                searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
-                vidCount += searchListResponse.Items.Count;
-                nextPageToken = searchListResponse.NextPageToken;
+            //    if (searchListResponse != null)
+            //    {
+            //        string videoIds = string.Empty;
 
-                if (searchListResponse != null)
-                {
-                    string videoIds = string.Empty;
+            //        if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
+            //        {
+            //            foreach (var searchResult in searchListResponse.Items)
+            //            {
+            //                videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
+            //            }
 
-                    if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
-                    {
-                        foreach (var searchResult in searchListResponse.Items)
-                        {
-                            videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
-                        }
+            //            // Remove last comma
+            //            videoIds = videoIds.Substring(0, videoIds.Length - 1);
 
-                        // Remove last comma
-                        videoIds = videoIds.Substring(0, videoIds.Length - 1);
+            //            FetchVideoInfo(videoIds);
+            //        }
 
-                        FetchVideoInfo(videoIds);
-                    }
+            //    }
+            //}
+            //while (nextPageToken != null);
 
-                }
-            }
-            while (nextPageToken != null);
-
-            Console.WriteLine("Total Video Count: " + vidCount);
+            //Console.WriteLine("Total Video Count: " + vidCount);
 
         }
 

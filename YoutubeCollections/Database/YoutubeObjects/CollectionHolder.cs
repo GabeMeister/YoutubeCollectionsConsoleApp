@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.Database.YoutubeObjects
 {
-    public class Collection
+    public class CollectionHolder
     {
     }
 }

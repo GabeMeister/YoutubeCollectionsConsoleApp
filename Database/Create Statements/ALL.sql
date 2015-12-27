@@ -1,10 +1,10 @@
-create table Users (
+﻿create table Users (
 UserID int primary key not null,
 Username char(50)
 );
 
 create table Channels (
-ChannelID INT PRIMARY KEY NOT NULL,
+ChannelID SERIAL PRIMARY KEY,
 YoutubeID CHAR(30) NOT NULL,
 Title CHAR(150) NOT NULL,
 Description CHAR(1000),
