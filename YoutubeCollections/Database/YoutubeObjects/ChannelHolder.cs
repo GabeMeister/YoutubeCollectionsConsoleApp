@@ -19,6 +19,8 @@ namespace YoutubeCollections.Database.YoutubeObjects
         public ulong? ViewCount { get; set; }
         public ulong? SubscriberCount { get; set; }
         public ulong? VideoCount { get; set; }
+        
+        
 
         
 
@@ -54,15 +56,7 @@ namespace YoutubeCollections.Database.YoutubeObjects
 
                     if (reader.Read())
                     {
-                        ChannelHolderId = Convert.ToUInt64(reader["ChannelID"]);
-                        YoutubeId = reader["YoutubeID"].ToString();
-                        Title = reader["Title"].ToString();
-                        Description = reader["Description"].ToString();
-                        UploadPlaylist = reader["UploadPlaylist"].ToString();
-                        Thumbnail = reader["Thumbnail"].ToString();
-                        ViewCount = Convert.ToUInt64(reader["ViewCount"]);
-                        SubscriberCount = Convert.ToUInt64(reader["SubscriberCount"]);
-                        VideoCount = Convert.ToUInt64(reader["VideoCount"]);
+                        InitializeFromDatabase(reader);
                     }
                     else
                     {
@@ -97,15 +91,8 @@ namespace YoutubeCollections.Database.YoutubeObjects
 
                     if (reader.Read())
                     {
-                        ChannelHolderId = Convert.ToUInt64(reader["ChannelID"]);
-                        YoutubeId = reader["YoutubeID"].ToString();
-                        Title = reader["Title"].ToString();
-                        Description = reader["Description"].ToString();
-                        UploadPlaylist = reader["UploadPlaylist"].ToString();
-                        Thumbnail = reader["Thumbnail"].ToString();
-                        ViewCount = Convert.ToUInt64(reader["ViewCount"]);
-                        SubscriberCount = Convert.ToUInt64(reader["SubscriberCount"]);
-                        VideoCount = Convert.ToUInt64(reader["VideoCount"]);
+                        InitializeFromDatabase(reader);
+                        
                     }
                     else
                     {
@@ -198,6 +185,19 @@ namespace YoutubeCollections.Database.YoutubeObjects
             return string.Format(SqlConst.InsertChannelSql, DBUtil.Sanitize(YoutubeId), DBUtil.Sanitize(Title),
                         DBUtil.Sanitize(Description), DBUtil.Sanitize(UploadPlaylist), DBUtil.Sanitize(Thumbnail), DBUtil.Sanitize(ViewCount), DBUtil.Sanitize(SubscriberCount),
                         DBUtil.Sanitize(VideoCount));
+        }
+
+        protected override void InitializeFromDatabase(NpgsqlDataReader reader)
+        {
+            ChannelHolderId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
+            YoutubeId = reader["YoutubeID"].ToString().Trim();
+            Title = reader["Title"].ToString().Trim();
+            Description = reader["Description"].ToString().Trim();
+            UploadPlaylist = reader["UploadPlaylist"].ToString().Trim();
+            Thumbnail = reader["Thumbnail"].ToString().Trim();
+            ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
+            SubscriberCount = Convert.ToUInt64(reader["SubscriberCount"].ToString().Trim());
+            VideoCount = Convert.ToUInt64(reader["VideoCount"].ToString().Trim());
         }
 
         protected string FetchSelectByChannelIdSql()

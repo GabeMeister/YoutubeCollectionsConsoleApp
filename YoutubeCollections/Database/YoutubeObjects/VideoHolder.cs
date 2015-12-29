@@ -19,6 +19,8 @@ namespace YoutubeCollections.Database.YoutubeObjects
         public string Thumbnail { get; set; }
         public string Duration { get; set; }
         public ulong? ViewCount { get; set; }
+        public DateTime? PublishedAt { get; set; }
+
 
         public VideoHolder()
         {
@@ -29,6 +31,7 @@ namespace YoutubeCollections.Database.YoutubeObjects
             Thumbnail = string.Empty;
             Duration = string.Empty;
             ViewCount = 0;
+            PublishedAt = null;
         }
 
         public VideoHolder(string youtubeId)
@@ -49,13 +52,7 @@ namespace YoutubeCollections.Database.YoutubeObjects
 
                     if (reader.Read())
                     {
-                        VideoHolderId = Convert.ToUInt64(reader["VideoID"]);
-                        YoutubeId = reader["YoutubeID"].ToString();
-                        ChannelId = Convert.ToUInt64(reader["ChannelId"]);
-                        Title = reader["Title"].ToString();
-                        Thumbnail = reader["Thumbnail"].ToString();
-                        Duration = reader["Duration"].ToString();
-                        ViewCount = Convert.ToUInt64(reader["ViewCount"]);
+                        InitializeFromDatabase(reader);
                     }
                     else
                     {
@@ -89,13 +86,7 @@ namespace YoutubeCollections.Database.YoutubeObjects
 
                     if (reader.Read())
                     {
-                        VideoHolderId = Convert.ToUInt64(reader["VideoID"]);
-                        YoutubeId = reader["YoutubeID"].ToString();
-                        ChannelId = Convert.ToUInt64(reader["ChannelId"]);
-                        Title = reader["Title"].ToString();
-                        Thumbnail = reader["Thumbnail"].ToString();
-                        Duration = reader["Duration"].ToString();
-                        ViewCount = Convert.ToUInt64(reader["ViewCount"]);
+                        InitializeFromDatabase(reader);
                     }
                     else
                     {
@@ -115,17 +106,18 @@ namespace YoutubeCollections.Database.YoutubeObjects
         {
             // Can't assign the actual id because we are populating from an API response
             VideoHolderId = 0;
-            YoutubeId = videoResponse.Id;
+            YoutubeId = videoResponse.Id.ToString().Trim();
             // Can't assign the actual channel id because we are populating from an API response
             ChannelId = 0;
-            YoutubeChannelId = videoResponse.Snippet.ChannelId;
-            Title = videoResponse.Snippet.Title;
-            Thumbnail = videoResponse.Snippet.Thumbnails.Medium.Url;
+            YoutubeChannelId = videoResponse.Snippet.ChannelId.ToString().Trim();
+            Title = videoResponse.Snippet.Title.ToString().Trim();
+            Thumbnail = videoResponse.Snippet.Thumbnails.Medium.Url.ToString().Trim();
             // We don't want the ISO format, "PT2m34s". We want the Timespan format: "00:02:34"
-            Duration = XmlConvert.ToTimeSpan(videoResponse.ContentDetails.Duration).ToString();
+            Duration = XmlConvert.ToTimeSpan(videoResponse.ContentDetails.Duration).ToString().Trim();
             ViewCount = videoResponse.Statistics.ViewCount;
-
+            PublishedAt = videoResponse.Snippet.PublishedAt;
         }
+
 
 
         public int InsertVideo()
@@ -174,13 +166,10 @@ namespace YoutubeCollections.Database.YoutubeObjects
             return rowsAffected;
         }
 
-
-
-
         public override string FetchInsertSql()
         {
             return string.Format(SqlConst.InsertVideoSql, DBUtil.Sanitize(YoutubeId), DBUtil.Sanitize(ChannelId), DBUtil.Sanitize(Title),
-                DBUtil.Sanitize(Thumbnail), DBUtil.Sanitize(Duration), DBUtil.Sanitize(ViewCount));
+                DBUtil.Sanitize(Thumbnail), DBUtil.Sanitize(Duration), DBUtil.Sanitize(ViewCount), DBUtil.Sanitize(PublishedAt.Value.ToString("yyyy-MM-dd HH:MM:ss")));
         }
 
         public string FetchSelectByVideoIdSql()
@@ -193,6 +182,18 @@ namespace YoutubeCollections.Database.YoutubeObjects
             return string.Format(SqlConst.SelectVideoByYoutubeIdSql, DBUtil.Sanitize(YoutubeId));
         }
 
+
+        protected override void InitializeFromDatabase(NpgsqlDataReader reader)
+        {
+            VideoHolderId = Convert.ToUInt64(reader["VideoID"].ToString().Trim());
+            YoutubeId = reader["YoutubeID"].ToString().Trim();
+            ChannelId = Convert.ToUInt64(reader["ChannelId"].ToString().Trim());
+            Title = reader["Title"].ToString().Trim();
+            Thumbnail = reader["Thumbnail"].ToString().Trim();
+            Duration = reader["Duration"].ToString().Trim();
+            ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
+            PublishedAt = DateTime.Parse(reader["PublishedAt"].ToString().Trim());
+        }
         
     }
 }

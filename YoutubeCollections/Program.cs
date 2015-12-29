@@ -29,6 +29,8 @@ namespace YoutubeCollections
         static string NoCopyrightSounds = "UC_aEa8K-EOJ3D6gOs7HcyNg";
         static string KoanSound = "UCazuZ5iU8LfQ6-IucPhctKQ";
         static string BrothersGreenEats = "UCzH5n3Ih5kgQoiDAQt2FwLw";
+        static string PewDiePie = "UC-lHJZR3Gqxm24_Vd_AJ5Yw";
+        static string GEazyMusicVEVO = "UCjjC1Jk_1o1VWpLalgo21XQ";
 
         static string ChannelsListFile = @"C:\Users\Gabe\Desktop\Channels.py";
 
@@ -42,10 +44,11 @@ namespace YoutubeCollections
             try
             {
                 //YoutubeWrapper.FetchChannelSubscriptions(myChannel);
-                //YoutubeWrapper.FetchChannelUploads(BrothersGreenEats);
+                //YoutubeWrapper.FetchChannelUploads(GEazyMusicVEVO);
                 //YoutubeWrapper.FetchChannelUploadsFromStream(new StreamReader(ChannelsListFile));
+                //YoutubeWrapper.WriteAllChannelIdsToStream(new StreamWriter(ChannelsListFile));
                 //YoutubeWrapper.AddPublishedAtTimeStamps();
-                YoutubeWrapper.BuildThumbnailCollage();
+                YoutubeWrapper.BuildThumbnailCollage("PewDiePie");
             }
             catch (AggregateException ex)
             {

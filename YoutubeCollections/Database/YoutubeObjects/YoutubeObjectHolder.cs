@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,5 +10,6 @@ namespace YoutubeCollections.Database.YoutubeObjects
     public abstract class YoutubeObjectHolder
     {
         public abstract string FetchInsertSql();
+        protected abstract void InitializeFromDatabase(NpgsqlDataReader reader);
     }
 }

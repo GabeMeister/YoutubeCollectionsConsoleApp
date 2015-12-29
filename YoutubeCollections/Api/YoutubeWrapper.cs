@@ -102,11 +102,7 @@ namespace YoutubeCollections
                 VideoHolder video = new VideoHolder(videoResponse);
                 video.InsertVideo();
 
-                Console.WriteLine("====================");
                 Console.WriteLine(video.Title);
-                Console.WriteLine(video.Thumbnail);
-                Console.WriteLine(video.Duration);
-                Console.WriteLine(video.ViewCount);
             }
             
         }
@@ -124,12 +120,41 @@ namespace YoutubeCollections
                     }
 
                     string[] tokens = line.Split('\t');
-                    string channelName = tokens[0];
-                    string channelId = tokens[1];
+                    string channelId = tokens[0];
+                    string youtubeId = tokens[1];
+                    string title = tokens[2];
 
-                    FetchChannelUploads(channelId);
+                    FetchChannelUploads(youtubeId);
 
                 }
+            }
+        }
+
+        public static void WriteAllChannelIdsToStream(StreamWriter writer)
+        {
+            using (writer)
+            {
+                string selectAllChannelsSql = SqlConst.SelectAllChannelsSql;
+
+                using (NpgsqlConnection conn = new NpgsqlConnection(SqlConst.DatabaseConnStr))
+                {
+                    conn.Open();
+                    
+                    NpgsqlCommand command = new NpgsqlCommand(selectAllChannelsSql, conn);
+                    NpgsqlDataReader reader = command.ExecuteReader();
+                    
+                    while(reader.Read())
+                    {
+                        string channelId = reader["ChannelID"].ToString().Trim();
+                        string youtubeId = reader["YoutubeID"].ToString().Trim();
+                        string title = reader["Title"].ToString().Trim();
+                        writer.WriteLine("{0}\t{1}\t{2}", channelId, youtubeId, title);
+                    }
+
+                    conn.Close();
+                }
+
+                
             }
         }
 
@@ -233,7 +258,7 @@ namespace YoutubeCollections
             }
         }
 
-        public static void BuildThumbnailCollage()
+        public static void BuildThumbnailCollage(string channelToDisplay)
         {
             try
             {
@@ -242,10 +267,7 @@ namespace YoutubeCollections
                     conn.Open();
 
                     // We check if the same youtube channel id has already been inserted
-                    string channelToDisplay = "Brothers Green Eats";
                     string selectByChannelSql = "select v.title, v.thumbnail, v.publishedat, c.title from videos v inner join channels c on c.channelid=v.channelid where c.title='{0}' order by publishedat;";
-                    string oldVideoSelectSql = "select * from videos order by publishedat limit 200;";
-                    string newVideoSelectSql = "select * from videos order by publishedat desc limit 200;";
 
                     NpgsqlCommand selectCommand = new NpgsqlCommand(string.Format(selectByChannelSql, channelToDisplay), conn);
                     NpgsqlDataReader reader = selectCommand.ExecuteReader();
