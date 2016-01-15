@@ -2,4 +2,4 @@
 *
 from 
 channels 
-limit 100;
+where channelID=76;

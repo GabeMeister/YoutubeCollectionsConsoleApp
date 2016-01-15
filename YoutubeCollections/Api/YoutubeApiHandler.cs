@@ -72,8 +72,6 @@ namespace YoutubeCollections
 
         
 
-
-
         private static YouTubeService FetchYoutubeService()
         {
             return new YouTubeService(new BaseClientService.Initializer() { ApiKey = API_KEY });
