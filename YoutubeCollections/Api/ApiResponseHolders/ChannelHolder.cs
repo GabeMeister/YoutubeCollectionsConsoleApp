@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.Api.ApiResponseHolders
 {
-    public class ChannelHolder
+    public class ChannelHolder : ApiResponseHolder
     {
         public ulong? ChannelHolderId { get; set; }
         public string YoutubeId { get; set; }
@@ -49,22 +49,57 @@ namespace YoutubeCollections.Api.ApiResponseHolders
         }
 
 
-        protected void InitializeFromDatabase(NpgsqlDataReader reader)
+        public ChannelHolder(NpgsqlDataReader reader)
         {
-            // TODO: refactor this to include checks for each attribute before initializing it.
-            ChannelHolderId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
-            YoutubeId = reader["YoutubeID"].ToString().Trim();
-            Title = reader["Title"].ToString().Trim();
-            Description = reader["Description"].ToString().Trim();
-            UploadPlaylist = reader["UploadPlaylist"].ToString().Trim();
-            Thumbnail = reader["Thumbnail"].ToString().Trim();
-            ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
-            SubscriberCount = Convert.ToUInt64(reader["SubscriberCount"].ToString().Trim());
-            VideoCount = Convert.ToUInt64(reader["VideoCount"].ToString().Trim());
+            if (ColumnExists(reader, "ChannelID"))
+            {
+                ChannelHolderId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "YoutubeID"))
+            {
+                YoutubeId = reader["YoutubeID"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "Title"))
+            {
+                Title = reader["Title"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "Description"))
+            {
+                Description = reader["Description"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "UploadPlaylist"))
+            {
+                UploadPlaylist = reader["UploadPlaylist"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "Thumbnail"))
+            {
+                Thumbnail = reader["Thumbnail"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "ViewCount"))
+            {
+                ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "SubscriberCount"))
+            {
+                SubscriberCount = Convert.ToUInt64(reader["SubscriberCount"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "VideoCount"))
+            {
+                VideoCount = Convert.ToUInt64(reader["VideoCount"].ToString().Trim());
+            }
         }
 
         
 
+        
         
     }
 }

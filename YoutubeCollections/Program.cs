@@ -47,8 +47,9 @@ namespace YoutubeCollections
             {
                 //YoutubeTasks.FetchAllUploadsForAllChannelSubscriptions(PewDiePie);
                 //YoutubeTasks.FetchChannelUploads(GEazyMusicVEVO);
-                YoutubeTasks.RecordChannelSubscriptions(BrothersGreenEats);
+                //YoutubeTasks.RecordChannelSubscriptions(BrothersGreenEats);
                 //YoutubeTasks.DetectChannelSubscriptions();
+                YoutubeTasks.UpdateAllMissingChannelUploads();
             }
             catch (AggregateException ex)
             {

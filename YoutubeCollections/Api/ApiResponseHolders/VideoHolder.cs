@@ -9,7 +9,7 @@ using System.Xml;
 
 namespace YoutubeCollections.Api.ApiResponseHolders
 {
-    public class VideoHolder
+    public class VideoHolder : ApiResponseHolder
     {
         public ulong? VideoHolderId { get; set; }
         public string YoutubeId { get; set; }
@@ -51,17 +51,56 @@ namespace YoutubeCollections.Api.ApiResponseHolders
         }
 
 
-        protected void InitializeFromDatabase(NpgsqlDataReader reader)
+        public VideoHolder(NpgsqlDataReader reader)
         {
-            // TODO: refactor this to include checks for each attribute before initializing it.
-            VideoHolderId = Convert.ToUInt64(reader["VideoID"].ToString().Trim());
-            YoutubeId = reader["YoutubeID"].ToString().Trim();
-            ChannelId = Convert.ToUInt64(reader["ChannelId"].ToString().Trim());
-            Title = reader["Title"].ToString().Trim();
-            Thumbnail = reader["Thumbnail"].ToString().Trim();
-            Duration = reader["Duration"].ToString().Trim();
-            ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
-            PublishedAt = DateTime.Parse(reader["PublishedAt"].ToString().Trim());
+            if (ColumnExists(reader, "VideoID"))
+            {
+                VideoHolderId = Convert.ToUInt64(reader["VideoID"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "YoutubeID"))
+            {
+                YoutubeId = reader["YoutubeID"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "ChannelId"))
+            {
+                ChannelId = Convert.ToUInt64(reader["ChannelId"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "Title"))
+            {
+                Title = reader["Title"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "Thumbnail"))
+            {
+                Thumbnail = reader["Thumbnail"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "Duration"))
+            {
+                Duration = reader["Duration"].ToString().Trim();
+            }
+
+            if (ColumnExists(reader, "ViewCount"))
+            {
+                ViewCount = Convert.ToUInt64(reader["ViewCount"].ToString().Trim());
+            }
+
+            if (ColumnExists(reader, "PublishedAt"))
+            {
+                PublishedAt = DateTime.Parse(reader["PublishedAt"].ToString().Trim());
+            }
+            
+            
+            
+            
+            
+            
+            
+            
+            
         }
         
     }

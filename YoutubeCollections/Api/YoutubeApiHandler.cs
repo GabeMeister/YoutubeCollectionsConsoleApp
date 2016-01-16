@@ -18,27 +18,27 @@ namespace YoutubeCollections
         private static string API_KEY = "AIzaSyD3PMEr28Ic6lIRisjCQZ1JO98aqHWLpR4";
         private const int MAX_RESULTS = 50;
 
-        public static ChannelListResponse FetchUploadsPlaylistByChannel(string channelId, string part)
+        public static ChannelListResponse FetchUploadsPlaylistByChannel(string youtubeId, string part)
         {
             var ytService = FetchYoutubeService();
 
             ChannelsResource.ListRequest channelRequest = ytService.Channels.List(part);
             channelRequest.MaxResults = MAX_RESULTS;
-            channelRequest.Id = channelId;
+            channelRequest.Id = youtubeId;
 
             ChannelListResponse channelResponse = channelRequest.Execute();
 
             return channelResponse;
         }
 
-        public static SubscriptionListResponse FetchSubscriptionsByChannel(string channelId, string pageToken, string part)
+        public static SubscriptionListResponse FetchSubscriptionsByChannel(string youtubeId, string pageToken, string part)
         {
             var ytService = FetchYoutubeService();
 
             SubscriptionsResource.ListRequest subscriptionRequest = ytService.Subscriptions.List(part);
             subscriptionRequest.MaxResults = MAX_RESULTS;
             subscriptionRequest.PageToken = pageToken;
-            subscriptionRequest.ChannelId = channelId;
+            subscriptionRequest.ChannelId = youtubeId;
 
             SubscriptionListResponse subscriptionResponse = subscriptionRequest.Execute();
 
@@ -46,30 +46,46 @@ namespace YoutubeCollections
 
         }
 
-        public static PlaylistItemListResponse FetchVideosByPlaylist(string playlistId, string pageToken, string part)
+        public static PlaylistItemListResponse FetchVideosByPlaylist(string youtubeId, string pageToken, string part)
         {
             var ytService = FetchYoutubeService();
 
             PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
             playlistRequest.MaxResults = MAX_RESULTS;
-            playlistRequest.PlaylistId = playlistId;
+            playlistRequest.PlaylistId = youtubeId;
             playlistRequest.PageToken = pageToken;
 
             return playlistRequest.Execute();
         }
 
-        public static VideoListResponse FetchVideoById(string videoId, string part)
+        public static VideoListResponse FetchVideoById(string youtubeId, string part)
         {
             var ytService = FetchYoutubeService();
 
             VideosResource.ListRequest videoRequest = ytService.Videos.List(part);
             videoRequest.MaxResults = MAX_RESULTS;
-            videoRequest.Id = videoId;
+            videoRequest.Id = youtubeId;
 
             return videoRequest.Execute();
         }
         
 
+
+        public static bool DoesChannelAllowViewingOfSubscriptions(string youtubeId)
+        {
+            bool isAllowed = true;
+
+            try
+            {
+                FetchSubscriptionsByChannel(youtubeId, "", "snippet");
+            }
+            catch (Exception)
+            {
+                isAllowed = false;
+            }
+
+            return isAllowed;
+        }
         
 
         private static YouTubeService FetchYoutubeService()

@@ -366,23 +366,48 @@ namespace YoutubeCollections
 
         public static void DetectChannelSubscriptions()
         {
-            //List<string> allYoutubeChannelIds = DBHandler.RetrieveColumnFromTable("YoutubeID", "Channels");
+            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
 
-            //foreach(string youtubeId in allYoutubeChannelIds)
-            //{
-            //    bool status = YoutubeApiHandler.DoesChannelAllowViewingOfSubscriptions(youtubeId);
+            foreach (ApiResponseHolder apiHolder in allYoutubeChannelIds)
+            {
+                ChannelHolder channel = apiHolder as ChannelHolder;
+                bool status = YoutubeApiHandler.DoesChannelAllowViewingOfSubscriptions(channel.YoutubeId);
 
-            //    DBHandler.re
+                if (status)
+                {
+                    //Console.WriteLine(channel.Title.PadRight(40) + channel.YoutubeId.PadRight(20) + " PUBLIC!");
+                }
+                else
+                {
+                    Console.WriteLine(channel.Title.PadRight(40) + channel.YoutubeId.PadRight(20) + " private");
+                }
+            }
+        }
 
-            //    if (status)
-            //    {
+        public static void UpdateAllMissingChannelUploads()
+        {
+            // Get all channel youtube ids
 
-            //    }
-            //    else
-            //    {
+            // API request 1 video
 
-            //    }
-            //}
+            // Check video id in database
+
+            // If found, then up to date
+
+            // If not found, then need up update 
+
+
+
+
+        }
+
+        public static void FetchMissingChannelUploads(string youtubeId)
+        {
+            // Check if completely new channel
+
+            // If completely new
+
+            // If not completely new
         }
 
     }

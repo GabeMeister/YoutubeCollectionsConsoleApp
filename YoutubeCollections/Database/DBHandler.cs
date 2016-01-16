@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using YoutubeCollections.Api.ApiResponseHolders;
@@ -66,31 +67,33 @@ namespace YoutubeCollections.Api
             return youtubeIds;
         }
 
-        public static List<T> RetrieveColumnsFromTable<T>(string columnsToSelect, string table)
+        public static List<ApiResponseHolder> RetrieveColumnsFromTable(Type itemType, string columnsToSelect, string table)
         {
-            List<T> objectHolders = new List<T>();
+            List<ApiResponseHolder> items = new List<ApiResponseHolder>();
 
-            //using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
-            //{
-            //    conn.Open();
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
 
-            //    string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
-            //    NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
-            //    NpgsqlDataReader reader = selectCommand.ExecuteReader();
+                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                NpgsqlDataReader reader = selectCommand.ExecuteReader();
 
-            //    if (reader.HasRows)
-            //    {
-            //        while (reader.Read())
-            //        {
-            //            T objectHolder = 
-            //            youtubeIds.Add(youtubeId);
-            //        }
-            //    }
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ConstructorInfo constructor = itemType.GetConstructor(new[] { typeof(NpgsqlDataReader) });
+                        ApiResponseHolder newItem = constructor.Invoke(new object[] { reader }) as ApiResponseHolder;
 
-            //    conn.Close();
-            //}
+                        items.Add(newItem);
+                    }
+                }
 
-            return objectHolders;
+                conn.Close();
+            }
+
+            return items;
         }
 
         #endregion
