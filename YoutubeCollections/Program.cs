@@ -45,12 +45,10 @@ namespace YoutubeCollections
 
             try
             {
-                YoutubeTasks.FetchAllUploadsForAllChannelSubscriptions(BrothersGreenEats);
-                //YoutubeWrapper.FetchChannelUploads(GEazyMusicVEVO);
-                //YoutubeWrapper.FetchChannelUploadsFromStream(new StreamReader(ChannelsListFile));
-                //YoutubeWrapper.WriteAllChannelIdsToStream(new StreamWriter(ChannelsListFile));
-                //YoutubeWrapper.AddPublishedAtTimeStamps();
-                //YoutubeWrapper.BuildThumbnailCollage(xKito);
+                //YoutubeTasks.FetchAllUploadsForAllChannelSubscriptions(PewDiePie);
+                //YoutubeTasks.FetchChannelUploads(GEazyMusicVEVO);
+                YoutubeTasks.RecordChannelSubscriptions(BrothersGreenEats);
+                //YoutubeTasks.DetectChannelSubscriptions();
             }
             catch (AggregateException ex)
             {

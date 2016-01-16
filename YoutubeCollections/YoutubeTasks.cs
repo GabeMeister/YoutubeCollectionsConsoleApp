@@ -41,7 +41,6 @@ namespace YoutubeCollections
                     {
                         Console.WriteLine(searchResult.Snippet.Title);
                         //FetchChannelUploads(searchResult.Snippet.ResourceId.ChannelId);
-                        
                     }
                 }
             }
@@ -53,14 +52,11 @@ namespace YoutubeCollections
         public static void FetchChannelUploads(string youtubeId)
         {
             int vidCount = 0;
-            ChannelListResponse channelResponse = YoutubeApiHandler.FetchUploadsPlaylistByChannel(youtubeId, "snippet,contentDetails,statistics");
-            ChannelHolder channel = new ChannelHolder(channelResponse.Items[0]);
-            DBHandler.InsertChannel(channel);
-
+            ChannelHolder channel = InsertChannelIntoDatabaseFromApiResponse(youtubeId);
             Console.WriteLine("************* " + channel.Title + " | " + channel.YoutubeId + " *************");
 
             string nextPageToken = string.Empty;
-            string uploadsPlaylistId = channelResponse.Items[0].ContentDetails.RelatedPlaylists.Uploads;
+            string uploadsPlaylistId = channel.UploadPlaylist;
             PlaylistItemListResponse searchListResponse;
 
             do
@@ -92,6 +88,15 @@ namespace YoutubeCollections
 
             Console.WriteLine("Total Video Count: " + vidCount);
 
+        }
+
+        public static ChannelHolder InsertChannelIntoDatabaseFromApiResponse(string youtubeId)
+        {
+            ChannelListResponse channelResponse = YoutubeApiHandler.FetchUploadsPlaylistByChannel(youtubeId, "snippet,contentDetails,statistics");
+            ChannelHolder channel = new ChannelHolder(channelResponse.Items[0]);
+            DBHandler.InsertChannel(channel);
+
+            return channel;
         }
 
         public static void FetchVideoInfo(string videoIds)
@@ -135,7 +140,7 @@ namespace YoutubeCollections
         {
             using (writer)
             {
-                string selectAllChannelsSql = SqlBuilder.FetchSelectAllSql("ChannelID,YoutubeID,Title", "Channels");
+                string selectAllChannelsSql = SqlBuilder.SelectAllSql("ChannelID,YoutubeID,Title", "Channels");
 
                 using (NpgsqlConnection conn = new NpgsqlConnection(DBHandler.DatabaseConnStr))
                 {
@@ -305,13 +310,79 @@ namespace YoutubeCollections
             }
         }
 
-        public static void RecordChannelSubscriptions(string youtubeId)
+        public static void RecordChannelSubscriptions(string subscriberYoutubeId)
         {
-            ChannelListResponse channelResponse = YoutubeApiHandler.FetchUploadsPlaylistByChannel(youtubeId, "snippet,contentDetails,statistics");
-            ChannelHolder channel = new ChannelHolder(channelResponse.Items[0]);
-            DBHandler.InsertChannel(channel);
+            int subscriptionCount = 0;
+            string nextPageToken = string.Empty;
+            SubscriptionListResponse subscriptionsList;
+
+            // Get actual channel id for the subscriber youtube channel
+            int subscriberChannelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", subscriberYoutubeId);
+            if (subscriberChannelId == -1)
+            {
+                // Channel hasn't been inserted into database yet.
+                InsertChannelIntoDatabaseFromApiResponse(subscriberYoutubeId);
+                subscriberChannelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", subscriberYoutubeId);
+            }
 
 
+            do
+            {
+                subscriptionsList = YoutubeApiHandler.FetchSubscriptionsByChannel(subscriberYoutubeId, nextPageToken, "snippet");
+                subscriptionCount += subscriptionsList.Items.Count;
+                nextPageToken = subscriptionsList.NextPageToken;
+
+                if (subscriptionsList != null)
+                {
+                    foreach (var searchResult in subscriptionsList.Items)
+                    {
+                        string title = searchResult.Snippet.Title;
+                        string beingSubscribedToYoutubeId = searchResult.Snippet.ResourceId.ChannelId;
+
+                        
+
+                        // Get actual channel id for the subscriber youtube channel
+                        int beingSubscribedToChannelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", beingSubscribedToYoutubeId);
+                        if (beingSubscribedToChannelId == -1)
+                        {
+                            // Channel hasn't been inserted into database yet.
+                            InsertChannelIntoDatabaseFromApiResponse(beingSubscribedToYoutubeId);
+                            beingSubscribedToChannelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", beingSubscribedToYoutubeId);
+                        }
+
+                        Console.WriteLine("Storing subscription to " + title + "...");
+                        DBHandler.InsertSubscription(subscriberChannelId, beingSubscribedToChannelId);
+
+                        
+                    }
+                }
+            }
+            while (nextPageToken != null);
+
+            Console.WriteLine("Total Subscription Count: " + subscriptionCount);
+
+
+        }
+
+        public static void DetectChannelSubscriptions()
+        {
+            //List<string> allYoutubeChannelIds = DBHandler.RetrieveColumnFromTable("YoutubeID", "Channels");
+
+            //foreach(string youtubeId in allYoutubeChannelIds)
+            //{
+            //    bool status = YoutubeApiHandler.DoesChannelAllowViewingOfSubscriptions(youtubeId);
+
+            //    DBHandler.re
+
+            //    if (status)
+            //    {
+
+            //    }
+            //    else
+            //    {
+
+            //    }
+            //}
         }
 
     }

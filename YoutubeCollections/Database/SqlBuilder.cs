@@ -11,12 +11,17 @@ namespace YoutubeCollections.Database
     {
         // ============================ GENERAL
         # region GENERAL
-        public static string FetchSelectByYoutubeIdSql(string columns, string table, string youtubeId)
+        public static string SelectByIdSql(string columnsToSelect, string table, string columnToQueryFor, string youtubeId)
         {
-            return string.Format(@"select {0} from {1} where YoutubeID='{1}';", Sanitize(columns), Sanitize(table), Sanitize(youtubeId));
+            return string.Format(@"select {0} from {1} where {2}='{3}';", Sanitize(columnsToSelect), Sanitize(table), Sanitize(columnToQueryFor), Sanitize(youtubeId));
         }
 
-        public static string FetchSelectAllSql(string columns, string table)
+        public static string SelectByIdSql(string columnsToSelect, string table, string columnToQueryFor, int id)
+        {
+            return string.Format(@"select {0} from {1} where {2}={3};", Sanitize(columnsToSelect), Sanitize(table), Sanitize(columnToQueryFor), Sanitize(id));
+        }
+
+        public static string SelectAllSql(string columns, string table)
         {
             return string.Format(@"select {0} from {1};", Sanitize(columns), Sanitize(table));
         }
@@ -49,12 +54,15 @@ namespace YoutubeCollections.Database
 
         // ============================ SUBSCRIPTIONS
         #region SUBSCRIPTIONS
-        public static string FetchSelectBySubscriberIdSql(string columns, string subscriberChannelId, string beingSubscribedToChannelId)
+        public static string SelectBySubscriberIdsSql(string columns, int subscriberChannelId, int beingSubscribedToChannelId)
         {
-            return string.Format(@"select {0} from Channels where SubscriberChannelId='{1}';", Sanitize(columns), Sanitize(subscriberChannelId));
+            return string.Format(@"select {0} from Subscriptions where SubscriberChannelID='{1}' and BeingSubscribedToChannelID='{2}';", 
+                Sanitize(columns), 
+                Sanitize(subscriberChannelId),
+                Sanitize(beingSubscribedToChannelId));
         }
 
-        public static string FetchInsertSubscriptionByChannelIdSql(int subscriberChannelId, int beingSubscribedToChannelId)
+        public static string InsertSubscriptionByChannelIdSql(int subscriberChannelId, int beingSubscribedToChannelId)
         {
             return string.Format(@"insert into Subscriptions (SubscriberChannelID, BeingSubscribedToChannelID) values ({0}, {1});",
                 Sanitize(subscriberChannelId),
@@ -66,12 +74,12 @@ namespace YoutubeCollections.Database
 
         // ============================ VIDEOS
         #region VIDEOS
-        public static string FetchSelectVideoByVideoIdSql(string columns, ulong? videoId)
+        public static string SelectVideoByVideoIdSql(string columns, ulong? videoId)
         {
             return string.Format(@"select {0} from Videos where VideoID={1};", Sanitize(columns), Sanitize(videoId));
         }
 
-        public static string FetchInsertVideoSql(VideoHolder video)
+        public static string InsertVideoSql(VideoHolder video)
         {
             return string.Format(@"insert into Videos (YoutubeID,ChannelID,Title,Thumbnail,Duration,ViewCount,PublishedAt) values ('{0}',{1},'{2}','{3}','{4}',{5},'{6}');",
                 Sanitize(video.YoutubeId),
