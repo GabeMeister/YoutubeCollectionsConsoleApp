@@ -40,6 +40,30 @@ namespace YoutubeCollections.Api
             return id;
         }
 
+        public static string RetrieveColumnBySingleCondition(string columnToSelect, string table, string columnToQuery, string queryValue)
+        {
+            string value = null;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectByIdSql(columnToSelect, table, columnToQuery, queryValue);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                NpgsqlDataReader reader = selectCommand.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    value = reader[columnToSelect].ToString().Trim();
+                }
+
+                conn.Close();
+            }
+
+            return value;
+        }
+
         public static List<string> RetrieveColumnFromTable(string columnToSelect, string table)
         {
             List<string> youtubeIds = new List<string>();
@@ -75,7 +99,8 @@ namespace YoutubeCollections.Api
             {
                 conn.Open();
 
-                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
+                // TODO: change back to no offset
+                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table).Replace(";", " offset 143;");
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 NpgsqlDataReader reader = selectCommand.ExecuteReader();
 
@@ -190,7 +215,9 @@ namespace YoutubeCollections.Api
                     string selectSql = SqlBuilder.SelectByIdSql("ChannelID", "Channels", "YoutubeID", video.YoutubeChannelId);
                     NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                     NpgsqlDataReader reader = selectCommand.ExecuteReader();
-                    ulong? channelId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
+                    reader.Read();
+                    video.ChannelId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
+                    reader.Close();
 
                     string insertSQL = SqlBuilder.InsertVideoSql(video);
                     NpgsqlCommand insertCommand = new NpgsqlCommand(insertSQL, conn);
@@ -215,7 +242,7 @@ namespace YoutubeCollections.Api
 
 
         #region Utilities
-        private static bool DoesItemExist(string table, string column, string youtubeId)
+        public static bool DoesItemExist(string table, string columnToQuery, string id)
         {
             bool doesExist = false;
 
@@ -223,7 +250,7 @@ namespace YoutubeCollections.Api
             {
                 conn.Open();
 
-                string selectSql = SqlBuilder.SelectByIdSql("count(*)", table, column, youtubeId);
+                string selectSql = SqlBuilder.SelectByIdSql("count(*)", table, columnToQuery, id);
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 int count = Convert.ToInt16(selectCommand.ExecuteScalar());
 
@@ -238,7 +265,30 @@ namespace YoutubeCollections.Api
             return doesExist;
         }
 
-        private static bool DoesSubscriptionExist(int subscriberChannelId, int beingSubscribedToChannelId)
+        public static bool DoesItemExist(string table, string columnToQuery, int id)
+        {
+            bool doesExist = false;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectByIdSql("count(*)", table, columnToQuery, id);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    doesExist = true;
+                }
+
+                conn.Close();
+            }
+
+            return doesExist;
+        }
+
+        public static bool DoesSubscriptionExist(int subscriberChannelId, int beingSubscribedToChannelId)
         {
             bool doesExist = false;
 

@@ -58,6 +58,18 @@ namespace YoutubeCollections
             return playlistRequest.Execute();
         }
 
+        public static PlaylistItemListResponse FetchVideosByPlaylist(string youtubeId, string pageToken, string part, int numResults)
+        {
+            var ytService = FetchYoutubeService();
+
+            PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
+            playlistRequest.MaxResults = numResults;
+            playlistRequest.PlaylistId = youtubeId;
+            playlistRequest.PageToken = pageToken;
+
+            return playlistRequest.Execute();
+        }
+
         public static VideoListResponse FetchVideoById(string youtubeId, string part)
         {
             var ytService = FetchYoutubeService();

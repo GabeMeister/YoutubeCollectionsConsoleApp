@@ -11,9 +11,9 @@ namespace YoutubeCollections.Database
     {
         // ============================ GENERAL
         # region GENERAL
-        public static string SelectByIdSql(string columnsToSelect, string table, string columnToQueryFor, string youtubeId)
+        public static string SelectByIdSql(string columnsToSelect, string table, string columnToQueryFor, string id)
         {
-            return string.Format(@"select {0} from {1} where {2}='{3}';", Sanitize(columnsToSelect), Sanitize(table), Sanitize(columnToQueryFor), Sanitize(youtubeId));
+            return string.Format(@"select {0} from {1} where {2}='{3}';", Sanitize(columnsToSelect), Sanitize(table), Sanitize(columnToQueryFor), Sanitize(id));
         }
 
         public static string SelectByIdSql(string columnsToSelect, string table, string columnToQueryFor, int id)
@@ -85,7 +85,6 @@ namespace YoutubeCollections.Database
                 Sanitize(video.YoutubeId),
                 Sanitize(video.ChannelId),
                 Sanitize(video.Title),
-                Sanitize(video.Thumbnail),
                 Sanitize(video.Thumbnail),
                 Sanitize(video.Duration),
                 Sanitize(video.ViewCount),

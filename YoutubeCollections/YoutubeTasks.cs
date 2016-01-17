@@ -108,7 +108,7 @@ namespace YoutubeCollections
                 VideoHolder video = new VideoHolder(videoResponse);
                 DBHandler.InsertVideo(video);
 
-                Console.WriteLine(video.Title);
+                //Console.WriteLine(video.Title);
             }
             
         }
@@ -387,27 +387,112 @@ namespace YoutubeCollections
         public static void UpdateAllMissingChannelUploads()
         {
             // Get all channel youtube ids
+            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
 
+            int count = 1;
             // API request 1 video
+            foreach(ApiResponseHolder apiResponse in allYoutubeChannelIds)
+            {
+                ChannelHolder channel = apiResponse as ChannelHolder;
 
-            // Check video id in database
+                if (!AreUploadsUpToDate(channel.YoutubeId))
+                {
+                    Console.WriteLine(count++ + ". " + channel.Title + " out of date. Fetching latest uploads...");
+                    FetchMissingChannelUploads(channel.YoutubeId);
+                }
+                else
+                {
+                    Console.WriteLine(count++ + ". " + channel.Title + " is up to date!");
+                }
+            }
+        }
+        
+        public static bool AreUploadsUpToDate(string youtubeChannelId)
+        {
+            // To check if uploads are up to date, we just have to request 1 video from the channel's uploads. 
+            // If we have that video, then uploads are up to date
+            bool status = false;
 
-            // If found, then up to date
+            // Get the uploads playlist id
+            string uploadPlaylistId = DBHandler.RetrieveColumnBySingleCondition("UploadPlaylist", "Channels", "YoutubeID", youtubeChannelId);
 
-            // If not found, then need up update 
+            // Fetch 1 video from the uploads playlist id
+            PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, "", "snippet", 1);
 
+            if (response != null && response.Items.Count > 0)
+            {
+                string latestVideoId = response.Items[0].Snippet.ResourceId.VideoId;
 
+                // Query database for latest video
+                status = DBHandler.DoesItemExist("Videos", "YoutubeID", latestVideoId);
+            }
 
-
+            return status;
         }
 
-        public static void FetchMissingChannelUploads(string youtubeId)
+        public static void FetchMissingChannelUploads(string youtubeChannelId)
         {
             // Check if completely new channel
+            if (!DBHandler.DoesItemExist("Channels", "YoutubeID", youtubeChannelId))
+            {
+                // Channel doesn't exist. Throw an exception because this function will only
+                // query for videos 5 at a time
+                throw new Exception("FetchMissingChannelUploads(): Unrecognized youtube channel id: " + youtubeChannelId);
+            }
 
-            // If completely new
+            // Fetch actual channel id from youtube channel id
+            int channelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", youtubeChannelId);
 
-            // If not completely new
+            // Check if completely new channel with no videos written to database
+            if (!DBHandler.DoesItemExist("Videos", "ChannelID", channelId))
+            {
+                // For channels with no videos previously written to database, we just fetch
+                // all the channel uploads
+                FetchChannelUploads(youtubeChannelId);
+            }
+            else
+            {
+                // For channels that have most of their videos inserted but the channel has a few more videos, 
+                // we execute this code
+
+                bool upToDate = false;
+                string pageToken = string.Empty;
+                int newVideoCount = 0;
+
+                // Get the uploads playlist
+                string uploadPlaylistId = DBHandler.RetrieveColumnBySingleCondition("UploadPlaylist", "Channels", "YoutubeID", youtubeChannelId);
+
+                do
+                {
+                    // Fetch 5 videos at a time
+                    PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, pageToken, "snippet", 5);
+                    pageToken = response.NextPageToken;
+
+                    foreach (PlaylistItem item in response.Items)
+                    {
+                        string youtubeVideoId = item.Snippet.ResourceId.VideoId;
+
+                        // Check if video is in database
+                        if (!DBHandler.DoesItemExist("Videos", "YoutubeID", youtubeVideoId))
+                        {
+                            // Perform api call and write to database
+                            FetchVideoInfo(youtubeVideoId);
+                            newVideoCount++;
+                        }
+                        else
+                        {
+                            upToDate = true;
+                            break;
+                        }
+                    }
+
+                }
+                while (!upToDate && pageToken != null);
+
+                Console.WriteLine("Found " + newVideoCount + " new video(s)");
+            }
+
+            
         }
 
     }

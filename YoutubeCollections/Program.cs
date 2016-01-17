@@ -24,6 +24,8 @@ namespace YoutubeCollections
     internal class YoutubeCollectionsApp
     {
         static string myChannel = "UC4LVLoBN0xbOb5xJuA0ia9A";
+        static string myUploadsPlaylist = "UU4LVLoBN0xbOb5xJuA0ia9A";
+
         static string xKito = "UCMOgdURr7d8pOVlc-alkfRg";
         static string theVibeGuide = "UCxH0sQJKG6Aq9-vFIPnDZ2A";
         static string NoCopyrightSounds = "UC_aEa8K-EOJ3D6gOs7HcyNg";
@@ -49,6 +51,10 @@ namespace YoutubeCollections
                 //YoutubeTasks.FetchChannelUploads(GEazyMusicVEVO);
                 //YoutubeTasks.RecordChannelSubscriptions(BrothersGreenEats);
                 //YoutubeTasks.DetectChannelSubscriptions();
+
+
+                //YoutubeTasks.UpdateAllMissingChannelUploads();
+                //YoutubeTasks.FetchMissingChannelUploads(myChannel);
                 YoutubeTasks.UpdateAllMissingChannelUploads();
             }
             catch (AggregateException ex)
