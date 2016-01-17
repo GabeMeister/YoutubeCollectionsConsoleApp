@@ -40,7 +40,11 @@ namespace YoutubeCollections.Api.ApiResponseHolders
             ChannelHolderId = null;
             YoutubeId = channelResponse.Id.ToString().Trim();
             Title = channelResponse.Snippet.Title.ToString().Trim();
+            // The database only holds up to 1000 characters
+            // Solution from http://stackoverflow.com/a/3566842/1751481
             Description = channelResponse.Snippet.Description.ToString().Trim();
+            Description = Description.Substring(0, Math.Min(Description.Length, 1000));
+
             UploadPlaylist = channelResponse.ContentDetails.RelatedPlaylists.Uploads.ToString().Trim();
             Thumbnail = channelResponse.Snippet.Thumbnails.Medium.Url.ToString().Trim();
             ViewCount = channelResponse.Statistics.ViewCount;

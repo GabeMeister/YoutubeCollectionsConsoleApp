@@ -99,8 +99,7 @@ namespace YoutubeCollections.Api
             {
                 conn.Open();
 
-                // TODO: change back to no offset
-                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table).Replace(";", " offset 143;");
+                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 NpgsqlDataReader reader = selectCommand.ExecuteReader();
 
@@ -166,6 +165,13 @@ namespace YoutubeCollections.Api
         #region SUBSCRIPTIONS
         public static int InsertSubscription(int subscriberChannelId, int beingSubscribedToChannelId)
         {
+            if (subscriberChannelId == -1 || beingSubscribedToChannelId == -1)
+            {
+                // The id is -1 if the channel doesn't exist or isn't available.
+                return -1;
+            }
+
+
             int rowsAffected = 0;
 
             // We check if the subscription already exists.

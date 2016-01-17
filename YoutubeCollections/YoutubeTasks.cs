@@ -92,10 +92,15 @@ namespace YoutubeCollections
 
         public static ChannelHolder InsertChannelIntoDatabaseFromApiResponse(string youtubeId)
         {
+            ChannelHolder channel = null;
             ChannelListResponse channelResponse = YoutubeApiHandler.FetchUploadsPlaylistByChannel(youtubeId, "snippet,contentDetails,statistics");
-            ChannelHolder channel = new ChannelHolder(channelResponse.Items[0]);
-            DBHandler.InsertChannel(channel);
 
+            if (channelResponse.Items != null && channelResponse.Items.Count > 0)
+            {
+                channel = new ChannelHolder(channelResponse.Items[0]);
+                DBHandler.InsertChannel(channel);
+            }
+            
             return channel;
         }
 
@@ -371,7 +376,7 @@ namespace YoutubeCollections
             foreach (ApiResponseHolder apiHolder in allYoutubeChannelIds)
             {
                 ChannelHolder channel = apiHolder as ChannelHolder;
-                bool status = YoutubeApiHandler.DoesChannelAllowViewingOfSubscriptions(channel.YoutubeId);
+                bool status = YoutubeApiHandler.DoesChannelHavePublicSubscriptions(channel.YoutubeId);
 
                 if (status)
                 {
@@ -493,6 +498,48 @@ namespace YoutubeCollections
             }
 
             
+        }
+
+        public static void FetchAllSubscriptionsToAllChannels()
+        {
+            int count = 1;
+            ChannelHolder channel = null;
+
+            // Get all channel youtube ids from database
+            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
+
+            try
+            {
+                // API request 1 video
+                foreach (ApiResponseHolder apiResponse in allYoutubeChannelIds)
+                {
+                    channel = apiResponse as ChannelHolder;
+
+                    if (YoutubeApiHandler.DoesChannelHavePublicSubscriptions(channel.YoutubeId))
+                    {
+                        Console.WriteLine(count++ + ". Fetching subscriptions for " + channel.Title);
+                        RecordChannelSubscriptions(channel.YoutubeId);
+                    }
+                    else
+                    {
+                        count++;
+                    }
+                }
+            }
+            catch(Exception)
+            {
+                Console.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
+
+                using (StreamWriter writer = File.AppendText(@"C:\Users\Gabe\Desktop\YTCollections Dump.log"))
+                {
+                    writer.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
+                }
+            }
+            
+
+            // Check if channel has public subscriptions
+
+            // Record subscriptions of channel to database
         }
 
     }

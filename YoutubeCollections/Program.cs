@@ -55,7 +55,8 @@ namespace YoutubeCollections
 
                 //YoutubeTasks.UpdateAllMissingChannelUploads();
                 //YoutubeTasks.FetchMissingChannelUploads(myChannel);
-                YoutubeTasks.UpdateAllMissingChannelUploads();
+                //YoutubeTasks.UpdateAllMissingChannelUploads();
+                YoutubeTasks.FetchAllSubscriptionsToAllChannels();
             }
             catch (AggregateException ex)
             {

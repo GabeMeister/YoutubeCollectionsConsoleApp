@@ -83,7 +83,7 @@ namespace YoutubeCollections
         
 
 
-        public static bool DoesChannelAllowViewingOfSubscriptions(string youtubeId)
+        public static bool DoesChannelHavePublicSubscriptions(string youtubeId)
         {
             bool isAllowed = true;
 
