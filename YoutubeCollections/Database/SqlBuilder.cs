@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YoutubeCollections.Api.ApiResponseHolders;
+using YoutubeCollections.ObjectHolders;
 
 namespace YoutubeCollections.Database
 {
@@ -67,6 +67,27 @@ namespace YoutubeCollections.Database
             return string.Format(@"insert into Subscriptions (SubscriberChannelID, BeingSubscribedToChannelID) values ({0}, {1});",
                 Sanitize(subscriberChannelId),
                 Sanitize(beingSubscribedToChannelId));
+        }
+
+
+        #endregion
+
+        // ============================ COLLECTIONS
+        #region COLLECTIONS
+
+        public static string SelectByChannelIdAndCollectionTitle(string columns, int channelId, string title)
+        {
+            return string.Format(@"select {0} from Collections where OwnerChannelID={1} and Title='{2}';",
+                Sanitize(columns),
+                Sanitize(channelId),
+                Sanitize(title));
+        }
+
+        public static string InsertCollectionSql(int channelId, string title)
+        {
+            return string.Format(@"insert into Collections (OwnerChannelID, Title) values ({0},'{1}');",
+                Sanitize(channelId),
+                Sanitize(title));
         }
 
 

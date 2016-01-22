@@ -1,9 +1,21 @@
-﻿select channelid,title from channels;
+﻿-- select VideoID, YoutubeID from videos where youtubeid='uhOBd34q2kM';
+select VideoID, YoutubeID from videos where VideoID=143518;
+select title from channels offset 557;
 
--- select 
--- v.title,v.thumbnail,v.publishedat,c.title
--- from videos v 
--- inner join channels c 
--- on c.channelid=v.channelid 
--- where publishedat is null
--- order by publishedat;
+
+select ChannelID,YoutubeID,Title from Channels limit 100;
+
+-- create index YoutubeVideoIDIndex on videos(YoutubeID);
+
+select * from channels where Title='MrSuicideSheep';
+select count(*) from channels;
+select count(*) from subscriptions;
+select count(*) from videos;
+
+
+select * from channels where title like '%Jimmy Fallon%';
+
+
+select * from videos where youtubeid='Pkm2MlXHo5A';
+
+select * from Collections;

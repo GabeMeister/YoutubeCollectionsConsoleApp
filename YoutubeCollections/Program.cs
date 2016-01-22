@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
 
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
@@ -12,7 +13,7 @@ using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
-using System.Text;
+
 
 namespace YoutubeCollections
 {
@@ -28,13 +29,12 @@ namespace YoutubeCollections
 
         static string xKito = "UCMOgdURr7d8pOVlc-alkfRg";
         static string theVibeGuide = "UCxH0sQJKG6Aq9-vFIPnDZ2A";
-        static string NoCopyrightSounds = "UC_aEa8K-EOJ3D6gOs7HcyNg";
-        static string KoanSound = "UCazuZ5iU8LfQ6-IucPhctKQ";
-        static string BrothersGreenEats = "UCzH5n3Ih5kgQoiDAQt2FwLw";
-        static string PewDiePie = "UC-lHJZR3Gqxm24_Vd_AJ5Yw";
-        static string GEazyMusicVEVO = "UCjjC1Jk_1o1VWpLalgo21XQ";
-        static string JimmyFallon = "UC8-Th83bH_thdKZDJCrn88g";
-        static string BayHey264 = "UCpAhhtiVgTWFEDASAcfV-iQ";
+        static string AssociatedPress = "UC52X5wxOL_s5yw0dQk7NtgA";
+        static string WildFilmsIndia = "UCixvwLpO_pk4uVOkkkqP3Mw";
+        static string TheYoungTurks = "UC1yBKRuGpC1tSM73A0ZjYjQ";
+        static string TVCultura = "UCjOJvvYe6tyEHY21OD33h8A";
+        static string TheTelegraph = "UCPgLNge0xqQHWM5B5EFH9Cg";
+        static string TomoNewsUS = "UCt-WqkTyKK1_70U4bb4k4lQ";
 
         static string ChannelsListFile = @"C:\Users\Gabe\Desktop\Channels.py";
 
@@ -53,10 +53,15 @@ namespace YoutubeCollections
                 //YoutubeTasks.DetectChannelSubscriptions();
 
 
-                //YoutubeTasks.UpdateAllMissingChannelUploads();
                 //YoutubeTasks.FetchMissingChannelUploads(myChannel);
                 //YoutubeTasks.UpdateAllMissingChannelUploads();
-                YoutubeTasks.FetchAllSubscriptionsToAllChannels();
+                //YoutubeTasks.FetchAllSubscriptionsToAllChannels();
+                YoutubeTasks.InsertCollectionsData();
+
+                
+                
+
+
             }
             catch (AggregateException ex)
             {

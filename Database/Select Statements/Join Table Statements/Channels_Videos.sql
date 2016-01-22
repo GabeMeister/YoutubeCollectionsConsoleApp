@@ -1,20 +1,28 @@
-﻿select 
-v.title,v.publishedat,c.title,c.channelid
-from videos v 
-inner join channels c 
-on c.channelid=v.channelid 
--- where c.YoutubeID='UC8-Th83bH_thdKZDJCrn88g'
-where c.ChannelID=76;
+﻿-- select 
+-- v.title,v.publishedat,c.title,c.channelid
+-- from videos v 
+-- inner join channels c 
+-- on c.channelid=v.channelid 
+-- -- where c.YoutubeID='UC8-Th83bH_thdKZDJCrn88g'
+-- where c.ChannelID=76;
 
 
 select 
-v.title,v.publishedat,c.title,c.channelid
+c.Title,c.YoutubeID,c.ChannelID,count(*)
 from channels c
 inner join videos v
 on c.channelid=v.channelid 
 -- where c.YoutubeID='UC8-Th83bH_thdKZDJCrn88g'
-where c.ChannelID=76;
+group by c.ChannelID
+order by count(*) desc;
 
-create index VideosTableChannelIDIndex on videos (ChannelID);
+-- select 
+-- c.Title,c.ChannelID,v.Title
+-- from channels c
+-- inner join videos v
+-- on c.channelid=v.channelid 
+-- -- where c.YoutubeID='UC8-Th83bH_thdKZDJCrn88g'
+-- where c.ChannelID=117;
 
-select title from videos where ChannelID=76;
+
+select * from channels limit 5;

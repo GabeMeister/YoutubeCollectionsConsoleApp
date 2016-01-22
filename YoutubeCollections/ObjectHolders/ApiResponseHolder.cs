@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace YoutubeCollections.Api.ApiResponseHolders
+namespace YoutubeCollections.ObjectHolders
 {
     public abstract class ApiResponseHolder
     {

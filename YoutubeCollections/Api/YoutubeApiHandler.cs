@@ -52,6 +52,7 @@ namespace YoutubeCollections
 
             PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
             playlistRequest.MaxResults = MAX_RESULTS;
+
             playlistRequest.PlaylistId = youtubeId;
             playlistRequest.PageToken = pageToken;
 

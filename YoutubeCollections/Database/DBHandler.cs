@@ -5,10 +5,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using YoutubeCollections.Api.ApiResponseHolders;
+using YoutubeCollections.ObjectHolders;
 using YoutubeCollections.Database;
 
-namespace YoutubeCollections.Api
+namespace YoutubeCollections.ObjectHolders
 {
     public class DBHandler
     {
@@ -99,7 +99,7 @@ namespace YoutubeCollections.Api
             {
                 conn.Open();
 
-                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
+                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table).Replace(";", " offset 3000;");
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 NpgsqlDataReader reader = selectCommand.ExecuteReader();
 
@@ -199,6 +199,100 @@ namespace YoutubeCollections.Api
         }
 
         
+        #endregion
+
+        // ============================ COLLECTIONS
+        #region COLLECTIONS
+
+        public static int InsertCollection(CollectionHolder collection)
+        {
+            int rowsAffected = 0;
+
+            // Find the actual channel id first
+            int channelId = RetrieveIdFromYoutubeId("ChannelID", "Channels", collection.OwnerYoutubeChannelId);
+
+            if (channelId == -1)
+            {
+                throw new Exception("Unrecognized youtube channel id: " + collection.OwnerYoutubeChannelId);
+            }
+
+            // Make sure there isn't already a collection with same name
+            if (!DoesCollectionExist(channelId, collection.Title))
+            {
+                // Insert the collection
+                using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+                {
+                    conn.Open();
+
+                    // Now we actually insert the channel because we know it's not in the database
+                    string insertSQL = SqlBuilder.InsertCollectionSql(channelId, collection.Title);
+                    NpgsqlCommand insertCommand = new NpgsqlCommand(insertSQL, conn);
+                    rowsAffected = insertCommand.ExecuteNonQuery();
+
+                    if (rowsAffected < 1)
+                    {
+                        throw new Exception("Collection insert didn't complete correctly.");
+                    }
+
+                    conn.Close();
+                }
+            }
+
+
+            return rowsAffected;
+        }
+
+        public static void RenameCollection(string ownerYoutubeChannelId, string origCollectionTitle, string newCollectionTitle)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public static void DeleteCollection(string ownerYoutubeChannelId, string collectionTitle)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public static int InsertCollectionItem(string ownerYoutubeChannelId, string collectionTitle, string newItemChannelId)
+        {
+            int rowsAffected = 0;
+
+
+
+            return rowsAffected;
+        }
+
+        public static void DeleteCollectionItem(string ownerYoutubeChannelId, string collectionTitle, string itemChannelIdToDelete)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        public static bool DoesCollectionExist(int ownerChannelId, string collectionTitle)
+        {
+            bool doesExist = false;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectByChannelIdAndCollectionTitle("count(*)", ownerChannelId, collectionTitle);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    doesExist = true;
+                }
+
+                conn.Close();
+            }
+
+            return doesExist;
+        }
+
+
         #endregion
 
         // ============================ VIDEOS

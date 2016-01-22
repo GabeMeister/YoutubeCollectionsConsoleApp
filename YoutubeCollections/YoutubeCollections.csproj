@@ -111,12 +111,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\ApiResponseHolders\ApiResponseHolder.cs" />
+    <Compile Include="ObjectHolders\ApiResponseHolder.cs" />
     <Compile Include="Database\SqlBuilder.cs" />
     <Compile Include="Database\DBHandler.cs" />
-    <Compile Include="Api\ApiResponseHolders\ChannelHolder.cs" />
-    <Compile Include="Api\ApiResponseHolders\CollectionHolder.cs" />
-    <Compile Include="Api\ApiResponseHolders\VideoHolder.cs" />
+    <Compile Include="ObjectHolders\ChannelHolder.cs" />
+    <Compile Include="ObjectHolders\CollectionHolder.cs" />
+    <Compile Include="ObjectHolders\CollectionItemHolder.cs" />
+    <Compile Include="ObjectHolders\VideoHolder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Api\YoutubeApiHandler.cs" />

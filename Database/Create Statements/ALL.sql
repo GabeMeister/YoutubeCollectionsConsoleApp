@@ -33,16 +33,16 @@ create table Subscriptions (
 	BeingSubscribedToChannelID INT NOT NULL references Channels(ChannelID)
 );
 
-create table Collections_Channels (
-	CollectionChannelID SERIAL PRIMARY KEY,
-	CollectionID INT NOT NULL REFERENCES Collections(CollectionID),
-	ChannelID INT NOT NULL REFERENCES Channels(ChannelID)
-);
-
 create table Collections (
 	CollectionID SERIAL PRIMARY KEY,
-	Title CHAR(50) NOT NULL,
-	Description CHAR(150)
+	OwnerChannelID INT NOT NULL REFERENCES Channels(ChannelID),
+	Title CHAR(50) NOT NULL
+);
+
+create table CollectionItems (
+	CollectionItemID SERIAL PRIMARY KEY,
+	CollectionID INT NOT NULL REFERENCES Collections(CollectionID),
+	ItemChannelID INT NOT NULL REFERENCES Channels(ChannelID)
 );
 
 

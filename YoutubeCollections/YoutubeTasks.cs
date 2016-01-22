@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.IO;
+using Npgsql;
+using YoutubeCollections.ObjectHolders;
+using YoutubeCollections.Database;
 
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
@@ -10,18 +15,16 @@ using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
-using System.Xml;
-using YoutubeCollections.Api;
-using YoutubeCollections.Api.ApiResponseHolders;
-using System.IO;
-using Npgsql;
-using YoutubeCollections.Database;
+
+
+
 
 namespace YoutubeCollections
 {
     public class YoutubeTasks
     {
         private const int MAX_RESULTS = 50;
+        private const string YOUTUBE_LOG_FILE = @"C:\Users\Gabe\Desktop\YTCollections Dump.log";
 
         public static void FetchAllUploadsForAllChannelSubscriptions(string youtubeId)
         {
@@ -61,33 +64,70 @@ namespace YoutubeCollections
 
             do
             {
-                searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
-                vidCount += searchListResponse.Items.Count;
-                nextPageToken = searchListResponse.NextPageToken;
-
-                if (searchListResponse != null)
+                try
                 {
-                    string videoIds = string.Empty;
+                    searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
+                    vidCount += searchListResponse.Items.Count;
+                    nextPageToken = searchListResponse.NextPageToken;
 
-                    if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
+                    if (searchListResponse != null)
                     {
-                        foreach (var searchResult in searchListResponse.Items)
+                        string videoIds = string.Empty;
+
+                        if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
                         {
-                            videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
+                            foreach (var searchResult in searchListResponse.Items)
+                            {
+                                videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
+                            }
+
+                            // Remove last comma
+                            videoIds = videoIds.Substring(0, videoIds.Length - 1);
+
+                            FetchVideoInfo(videoIds);
                         }
 
-                        // Remove last comma
-                        videoIds = videoIds.Substring(0, videoIds.Length - 1);
-
-                        FetchVideoInfo(videoIds);
                     }
-
                 }
+                catch (Exception e)
+                {
+                    // Log the error and attempt the api query again
+                    using (StreamWriter writer = File.AppendText(YOUTUBE_LOG_FILE))
+                    {
+                        writer.WriteLine("Error on " + channel.Title + " with " + nextPageToken + " as page token");
+                    }
+                }
+                
             }
             while (nextPageToken != null);
 
             Console.WriteLine("Total Video Count: " + vidCount);
 
+        }
+
+        public static void MultiThreadedFetchAllChannelUploads()
+        {
+            // TODO
+            //Thread t1 = new Thread(() => YoutubeTasks.FetchChannelUploads(AssociatedPress));
+            //Thread t2 = new Thread(() => YoutubeTasks.FetchChannelUploads(WildFilmsIndia));
+            //Thread t3 = new Thread(() => YoutubeTasks.FetchChannelUploads(TheYoungTurks));
+            //Thread t4 = new Thread(() => YoutubeTasks.FetchChannelUploads(TVCultura));
+            //Thread t5 = new Thread(() => YoutubeTasks.FetchChannelUploads(TheTelegraph));
+            //Thread t6 = new Thread(() => YoutubeTasks.FetchChannelUploads(TomoNewsUS));
+
+            //t1.Start();
+            //t2.Start();
+            //t3.Start();
+            //t4.Start();
+            //t5.Start();
+            //t6.Start();
+
+            //t1.Join();
+            //t2.Join();
+            //t3.Join();
+            //t4.Join();
+            //t5.Join();
+            //t6.Join();
         }
 
         public static ChannelHolder InsertChannelIntoDatabaseFromApiResponse(string youtubeId)
@@ -111,10 +151,12 @@ namespace YoutubeCollections
             foreach(var videoResponse in videos.Items)
             {
                 VideoHolder video = new VideoHolder(videoResponse);
-                DBHandler.InsertVideo(video);
+                //DBHandler.InsertVideo(video);
 
-                //Console.WriteLine(video.Title);
+                Console.WriteLine("{0}: {1}", video.YoutubeChannelId, video.Title);
             }
+
+            //Console.Write("█");
             
         }
 
@@ -403,6 +445,12 @@ namespace YoutubeCollections
                 if (!AreUploadsUpToDate(channel.YoutubeId))
                 {
                     Console.WriteLine(count++ + ". " + channel.Title + " out of date. Fetching latest uploads...");
+
+                    using (StreamWriter writer = File.AppendText(YOUTUBE_LOG_FILE))
+                    {
+                        writer.WriteLine("Fetching latest uploads for " + channel.Title);
+                    }
+
                     FetchMissingChannelUploads(channel.YoutubeId);
                 }
                 else
@@ -530,7 +578,7 @@ namespace YoutubeCollections
             {
                 Console.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
 
-                using (StreamWriter writer = File.AppendText(@"C:\Users\Gabe\Desktop\YTCollections Dump.log"))
+                using (StreamWriter writer = File.AppendText(YOUTUBE_LOG_FILE))
                 {
                     writer.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
                 }
@@ -540,6 +588,21 @@ namespace YoutubeCollections
             // Check if channel has public subscriptions
 
             // Record subscriptions of channel to database
+        }
+
+        public static void InsertCollectionsData()
+        {
+            CollectionHolder collection = new CollectionHolder();
+            collection.OwnerYoutubeChannelId = "UC4LVLoBN0xbOb5xJuA0ia9A";
+            collection.Title = "Late Night TV";
+
+
+            CollectionItemHolder collectionItem = new CollectionItemHolder();
+            collectionItem.CollectionId = 2;
+            collectionItem.ItemChannelId = 76;
+
+            // TODO: finish collection item insert functionality
+            DBHandler.InsertCollection(collection);
         }
 
     }

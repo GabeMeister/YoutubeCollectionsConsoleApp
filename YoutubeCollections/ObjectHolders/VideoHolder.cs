@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace YoutubeCollections.Api.ApiResponseHolders
+namespace YoutubeCollections.ObjectHolders
 {
     public class VideoHolder : ApiResponseHolder
     {
