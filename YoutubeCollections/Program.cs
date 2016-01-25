@@ -56,7 +56,8 @@ namespace YoutubeCollections
                 //YoutubeTasks.FetchMissingChannelUploads(myChannel);
                 //YoutubeTasks.UpdateAllMissingChannelUploads();
                 //YoutubeTasks.FetchAllSubscriptionsToAllChannels();
-                YoutubeTasks.InsertCollectionsData();
+                //YoutubeTasks.InsertCollectionsData();
+                YoutubeTasks.DeleteCollectionsData();
 
                 
                 

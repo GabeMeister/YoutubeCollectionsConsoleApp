@@ -82,7 +82,25 @@ namespace YoutubeCollections.Database
                 Sanitize(channelId),
                 Sanitize(title));
         }
+        
+        public static string InsertCollectionSql(int channelId, string title)
+        {
+            return string.Format(@"insert into Collections (OwnerChannelID, Title) values ({0},'{1}');",
+                Sanitize(channelId),
+                Sanitize(title));
+        }
 
+        public static string DeleteCollectionSql(int collectionId)
+        {
+            return string.Format(@"delete from Collections where CollectionID={0};",
+                Sanitize(collectionId));
+        }
+
+
+        #endregion
+
+        // ============================ COLLECTION ITEMS
+        #region COLLECTION ITEMS
         public static string SelectCollectionItemByChannelId(string columns, int collectionId, int channelId)
         {
             return string.Format(@"select {0} from CollectionItems where CollectionID={1} and ItemChannelID={2};",
@@ -91,16 +109,16 @@ namespace YoutubeCollections.Database
                 Sanitize(channelId));
         }
 
-        public static string InsertCollectionSql(int channelId, string title)
-        {
-            return string.Format(@"insert into Collections (OwnerChannelID, Title) values ({0},'{1}');",
-                Sanitize(channelId),
-                Sanitize(title));
-        }
-
         public static string InsertCollectionItemSql(int collectionId, int itemChannelId)
         {
             return string.Format(@"insert into CollectionItems (CollectionID, ItemChannelID) values ({0},{1});",
+                Sanitize(collectionId),
+                Sanitize(itemChannelId));
+        }
+
+        public static string DeleteCollectionItemSql(int collectionId, int itemChannelId)
+        {
+            return string.Format(@"delete from CollectionItems where CollectionID={0} and ItemChannelID={1};",
                 Sanitize(collectionId),
                 Sanitize(itemChannelId));
         }

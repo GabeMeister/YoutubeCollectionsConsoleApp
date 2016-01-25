@@ -8,8 +8,8 @@ namespace YoutubeCollections.ObjectHolders
 {
     public class CollectionItemHolder : ObjectHolder
     {
-        public ulong? CollectionItemHolderId { get; set; }
-        public ulong? CollectionId { get; set; }
-        public ulong? ItemChannelId { get; set; }
+        public int CollectionItemHolderId { get; set; }
+        public int CollectionId { get; set; }
+        public int ItemChannelId { get; set; }
     }
 }

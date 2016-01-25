@@ -41,8 +41,8 @@ create table Collections (
 
 create table CollectionItems (
 	CollectionItemID SERIAL PRIMARY KEY,
-	CollectionID INT NOT NULL REFERENCES Collections(CollectionID),
-	ItemChannelID INT NOT NULL REFERENCES Channels(ChannelID)
+	CollectionID INT NOT NULL REFERENCES Collections(CollectionID) ON DELETE CASCADE,
+	ItemChannelID INT NOT NULL REFERENCES Channels(ChannelID) ON DELETE CASCADE
 );
 
 

@@ -158,7 +158,7 @@ namespace YoutubeCollections.ObjectHolders
             return rowsAffected;
         }
 
-        
+         
 
         #endregion
 
@@ -199,6 +199,28 @@ namespace YoutubeCollections.ObjectHolders
             return rowsAffected;
         }
 
+        public static bool DoesSubscriptionExist(int subscriberChannelId, int beingSubscribedToChannelId)
+        {
+            bool doesExist = false;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectBySubscriberIdsSql("count(*)", subscriberChannelId, beingSubscribedToChannelId);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    doesExist = true;
+                }
+
+                conn.Close();
+            }
+
+            return doesExist;
+        }
         
         #endregion
 
@@ -249,10 +271,35 @@ namespace YoutubeCollections.ObjectHolders
             throw new NotImplementedException();
         }
 
-        public static void DeleteCollection(string ownerYoutubeChannelId, string collectionTitle)
+        public static int DeleteCollection(int collectionId)
         {
-            // TODO
-            throw new NotImplementedException();
+            int rowsAffected = 0;
+
+            // Check that the collection exists
+            bool exists = DoesItemExist("Collections", "CollectionID", collectionId);
+            if (!exists)
+            {
+                throw new Exception("Trying to delete non-existant collection.");
+            }
+
+            // Delete the collection
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string deleteSql = SqlBuilder.DeleteCollectionSql(collectionId);
+                NpgsqlCommand deleteCommand = new NpgsqlCommand(deleteSql, conn);
+                rowsAffected = deleteCommand.ExecuteNonQuery();
+
+                if (rowsAffected < 1)
+                {
+                    throw new Exception("Collection delete didn't complete correctly.");
+                }
+
+                conn.Close();
+            }
+
+            return rowsAffected;
         }
 
         public static bool DoesCollectionExist(int ownerChannelId, string collectionTitle)
@@ -283,10 +330,12 @@ namespace YoutubeCollections.ObjectHolders
 
         // ============================ COLLECTION ITEMS
         #region COLLECTION ITEMS
-        public static int InsertCollectionItem(int collectionId, int itemChannelId)
+        public static int InsertCollectionItem(CollectionItemHolder collectionItem)
         {
             int rowsAffected = 0;
 
+            int collectionId = collectionItem.CollectionId;
+            int itemChannelId = collectionItem.ItemChannelId;
 
             // Check that the collection exists
             bool exists = DoesItemExist("Collections", "CollectionID", collectionId);
@@ -331,10 +380,35 @@ namespace YoutubeCollections.ObjectHolders
             return rowsAffected;
         }
 
-        public static void DeleteCollectionItem(string ownerYoutubeChannelId, string collectionTitle, string itemChannelIdToDelete)
+        public static int DeleteCollectionItem(int collectionId, int itemChannelId)
         {
-            // TODO
-            throw new NotImplementedException();
+            int rowsAffected = 0;
+
+            // Check that the collection item exists
+            bool exists = DoesCollectionItemExist(collectionId, itemChannelId);
+            if (!exists)
+            {
+                throw new Exception("Trying to delete non-existant collection item.");
+            }
+
+            // Delete the collection item
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string deleteSql = SqlBuilder.DeleteCollectionItemSql(collectionId, itemChannelId);
+                NpgsqlCommand deleteCommand = new NpgsqlCommand(deleteSql, conn);
+                rowsAffected = deleteCommand.ExecuteNonQuery();
+
+                if (rowsAffected < 1)
+                {
+                    throw new Exception("Collection item delete didn't complete correctly.");
+                }
+
+                conn.Close();
+            }
+
+            return rowsAffected;
         }
 
         public static bool DoesCollectionItemExist(int collectionId, int channelId)
@@ -360,6 +434,7 @@ namespace YoutubeCollections.ObjectHolders
             return doesExist;
         }
 
+        
 
         #endregion
 
@@ -456,28 +531,8 @@ namespace YoutubeCollections.ObjectHolders
             return doesExist;
         }
 
-        public static bool DoesSubscriptionExist(int subscriberChannelId, int beingSubscribedToChannelId)
-        {
-            bool doesExist = false;
+        
 
-            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
-            {
-                conn.Open();
-
-                string selectSql = SqlBuilder.SelectBySubscriberIdsSql("count(*)", subscriberChannelId, beingSubscribedToChannelId);
-                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
-                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
-
-                if (count > 0)
-                {
-                    doesExist = true;
-                }
-
-                conn.Close();
-            }
-
-            return doesExist;
-        }
 
         
         #endregion

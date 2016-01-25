@@ -596,14 +596,19 @@ namespace YoutubeCollections
             //collection.OwnerChannelId = 117;
             //collection.Title = "Funny";
 
-
-            //CollectionItemHolder collectionItem = new CollectionItemHolder();
-            //collectionItem.CollectionId = 2;
-            //collectionItem.ItemChannelId = 76;
-
-            // TODO: finish collection item insert functionality
             //DBHandler.InsertCollection(collection);
-            DBHandler.InsertCollectionItem(3, -101);
+
+
+            CollectionItemHolder collectionItem = new CollectionItemHolder();
+            collectionItem.CollectionId = 1;
+            collectionItem.ItemChannelId = 76;
+
+            DBHandler.InsertCollectionItem(collectionItem);
+        }
+
+        public static void DeleteCollectionsData()
+        {
+            DBHandler.DeleteCollection(1);
         }
 
     }
