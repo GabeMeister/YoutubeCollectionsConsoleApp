@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.ObjectHolders
 {
-    public class CollectionItemHolder : ApiResponseHolder
+    public class CollectionItemHolder : ObjectHolder
     {
         public ulong? CollectionItemHolderId { get; set; }
         public ulong? CollectionId { get; set; }

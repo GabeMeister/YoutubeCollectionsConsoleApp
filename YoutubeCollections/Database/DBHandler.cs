@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using YoutubeCollections.ObjectHolders;
 using YoutubeCollections.Database;
+using System.Diagnostics;
 
 namespace YoutubeCollections.ObjectHolders
 {
@@ -91,9 +92,9 @@ namespace YoutubeCollections.ObjectHolders
             return youtubeIds;
         }
 
-        public static List<ApiResponseHolder> RetrieveColumnsFromTable(Type itemType, string columnsToSelect, string table)
+        public static List<ObjectHolder> RetrieveColumnsFromTable(Type itemType, string columnsToSelect, string table)
         {
-            List<ApiResponseHolder> items = new List<ApiResponseHolder>();
+            List<ObjectHolder> items = new List<ObjectHolder>();
 
             using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
             {
@@ -108,7 +109,7 @@ namespace YoutubeCollections.ObjectHolders
                     while (reader.Read())
                     {
                         ConstructorInfo constructor = itemType.GetConstructor(new[] { typeof(NpgsqlDataReader) });
-                        ApiResponseHolder newItem = constructor.Invoke(new object[] { reader }) as ApiResponseHolder;
+                        ObjectHolder newItem = constructor.Invoke(new object[] { reader }) as ObjectHolder;
 
                         items.Add(newItem);
                     }
@@ -208,16 +209,16 @@ namespace YoutubeCollections.ObjectHolders
         {
             int rowsAffected = 0;
 
-            // Find the actual channel id first
-            int channelId = RetrieveIdFromYoutubeId("ChannelID", "Channels", collection.OwnerYoutubeChannelId);
+            // Check that the owner channel id exists
+            bool exists = DoesItemExist("Channels", "ChannelID", collection.OwnerChannelId);
 
-            if (channelId == -1)
+            if (!exists)
             {
                 throw new Exception("Unrecognized youtube channel id: " + collection.OwnerYoutubeChannelId);
             }
 
             // Make sure there isn't already a collection with same name
-            if (!DoesCollectionExist(channelId, collection.Title))
+            if (!DoesCollectionExist(collection.OwnerChannelId, collection.Title))
             {
                 // Insert the collection
                 using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
@@ -225,7 +226,7 @@ namespace YoutubeCollections.ObjectHolders
                     conn.Open();
 
                     // Now we actually insert the channel because we know it's not in the database
-                    string insertSQL = SqlBuilder.InsertCollectionSql(channelId, collection.Title);
+                    string insertSQL = SqlBuilder.InsertCollectionSql(collection.OwnerChannelId, collection.Title);
                     NpgsqlCommand insertCommand = new NpgsqlCommand(insertSQL, conn);
                     rowsAffected = insertCommand.ExecuteNonQuery();
 
@@ -254,9 +255,48 @@ namespace YoutubeCollections.ObjectHolders
             throw new NotImplementedException();
         }
 
-        public static int InsertCollectionItem(string ownerYoutubeChannelId, string collectionTitle, string newItemChannelId)
+        public static int InsertCollectionItem(int collectionId, int itemChannelId)
         {
             int rowsAffected = 0;
+
+
+            // Check that the collection exists
+            bool exists = DoesItemExist("Collections", "CollectionID", collectionId);
+            if (!exists)
+            {
+                throw new Exception("Unrecognized youtube collection id: " + collectionId);
+            }
+
+            // Check that the channel id exists
+            exists = DoesItemExist("Channels", "ChannelID", itemChannelId);
+            if (!exists)
+            {
+                throw new Exception("Unrecognized channel id: " + itemChannelId);
+            }
+
+
+
+            // Make sure there isn't already a channel in the collection with the same name
+            if (!DoesCollectionItemExist(collectionId, itemChannelId))
+            {
+                // Insert the collection
+                using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+                {
+                    conn.Open();
+
+                    // Now we actually insert the channel because we know it's not in the database
+                    string insertSQL = SqlBuilder.InsertCollectionItemSql(collectionId, itemChannelId);
+                    NpgsqlCommand insertCommand = new NpgsqlCommand(insertSQL, conn);
+                    rowsAffected = insertCommand.ExecuteNonQuery();
+
+                    if (rowsAffected < 1)
+                    {
+                        throw new Exception("Collection item insert didn't complete correctly.");
+                    }
+
+                    conn.Close();
+                }
+            }
 
 
 
@@ -278,6 +318,29 @@ namespace YoutubeCollections.ObjectHolders
                 conn.Open();
 
                 string selectSql = SqlBuilder.SelectByChannelIdAndCollectionTitle("count(*)", ownerChannelId, collectionTitle);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    doesExist = true;
+                }
+
+                conn.Close();
+            }
+
+            return doesExist;
+        }
+
+        public static bool DoesCollectionItemExist(int collectionId, int channelId)
+        {
+            bool doesExist = false;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectCollectionItemByChannelId("count(*)", collectionId, channelId);
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 int count = Convert.ToInt16(selectCommand.ExecuteScalar());
 

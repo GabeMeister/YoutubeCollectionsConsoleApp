@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.ObjectHolders
 {
-    public abstract class ApiResponseHolder
+    public abstract class ObjectHolder
     {
         protected bool ColumnExists(NpgsqlDataReader reader, string columnName)
         {

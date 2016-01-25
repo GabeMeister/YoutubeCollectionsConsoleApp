@@ -413,9 +413,9 @@ namespace YoutubeCollections
 
         public static void DetectChannelSubscriptions()
         {
-            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
+            List<ObjectHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
 
-            foreach (ApiResponseHolder apiHolder in allYoutubeChannelIds)
+            foreach (ObjectHolder apiHolder in allYoutubeChannelIds)
             {
                 ChannelHolder channel = apiHolder as ChannelHolder;
                 bool status = YoutubeApiHandler.DoesChannelHavePublicSubscriptions(channel.YoutubeId);
@@ -434,11 +434,11 @@ namespace YoutubeCollections
         public static void UpdateAllMissingChannelUploads()
         {
             // Get all channel youtube ids
-            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
+            List<ObjectHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
 
             int count = 1;
             // API request 1 video
-            foreach(ApiResponseHolder apiResponse in allYoutubeChannelIds)
+            foreach(ObjectHolder apiResponse in allYoutubeChannelIds)
             {
                 ChannelHolder channel = apiResponse as ChannelHolder;
 
@@ -554,12 +554,12 @@ namespace YoutubeCollections
             ChannelHolder channel = null;
 
             // Get all channel youtube ids from database
-            List<ApiResponseHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
+            List<ObjectHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
 
             try
             {
                 // API request 1 video
-                foreach (ApiResponseHolder apiResponse in allYoutubeChannelIds)
+                foreach (ObjectHolder apiResponse in allYoutubeChannelIds)
                 {
                     channel = apiResponse as ChannelHolder;
 
@@ -592,17 +592,18 @@ namespace YoutubeCollections
 
         public static void InsertCollectionsData()
         {
-            CollectionHolder collection = new CollectionHolder();
-            collection.OwnerYoutubeChannelId = "UC4LVLoBN0xbOb5xJuA0ia9A";
-            collection.Title = "Late Night TV";
+            //CollectionHolder collection = new CollectionHolder();
+            //collection.OwnerChannelId = 117;
+            //collection.Title = "Funny";
 
 
-            CollectionItemHolder collectionItem = new CollectionItemHolder();
-            collectionItem.CollectionId = 2;
-            collectionItem.ItemChannelId = 76;
+            //CollectionItemHolder collectionItem = new CollectionItemHolder();
+            //collectionItem.CollectionId = 2;
+            //collectionItem.ItemChannelId = 76;
 
             // TODO: finish collection item insert functionality
-            DBHandler.InsertCollection(collection);
+            //DBHandler.InsertCollection(collection);
+            DBHandler.InsertCollectionItem(3, -101);
         }
 
     }

@@ -83,11 +83,26 @@ namespace YoutubeCollections.Database
                 Sanitize(title));
         }
 
+        public static string SelectCollectionItemByChannelId(string columns, int collectionId, int channelId)
+        {
+            return string.Format(@"select {0} from CollectionItems where CollectionID={1} and ItemChannelID={2};",
+                Sanitize(columns),
+                Sanitize(collectionId),
+                Sanitize(channelId));
+        }
+
         public static string InsertCollectionSql(int channelId, string title)
         {
             return string.Format(@"insert into Collections (OwnerChannelID, Title) values ({0},'{1}');",
                 Sanitize(channelId),
                 Sanitize(title));
+        }
+
+        public static string InsertCollectionItemSql(int collectionId, int itemChannelId)
+        {
+            return string.Format(@"insert into CollectionItems (CollectionID, ItemChannelID) values ({0},{1});",
+                Sanitize(collectionId),
+                Sanitize(itemChannelId));
         }
 
 

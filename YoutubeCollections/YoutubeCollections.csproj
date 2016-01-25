@@ -111,7 +111,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ObjectHolders\ApiResponseHolder.cs" />
+    <Compile Include="ObjectHolders\ObjectHolder.cs" />
     <Compile Include="Database\SqlBuilder.cs" />
     <Compile Include="Database\DBHandler.cs" />
     <Compile Include="ObjectHolders\ChannelHolder.cs" />

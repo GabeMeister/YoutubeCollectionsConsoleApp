@@ -9,7 +9,7 @@ using System.Xml;
 
 namespace YoutubeCollections.ObjectHolders
 {
-    public class VideoHolder : ApiResponseHolder
+    public class VideoHolder : ObjectHolder
     {
         public ulong? VideoHolderId { get; set; }
         public string YoutubeId { get; set; }

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.ObjectHolders
 {
-    public class ChannelHolder : ApiResponseHolder
+    public class ChannelHolder : ObjectHolder
     {
-        public ulong? ChannelHolderId { get; set; }
+        public int ChannelHolderId { get; set; }
         public string YoutubeId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
@@ -23,7 +23,7 @@ namespace YoutubeCollections.ObjectHolders
 
         public ChannelHolder()
         {
-            ChannelHolderId = null;
+            ChannelHolderId = -1;
             YoutubeId = string.Empty;
             Title = string.Empty;
             Description = string.Empty;
@@ -37,7 +37,7 @@ namespace YoutubeCollections.ObjectHolders
         public ChannelHolder(Channel channelResponse)
         {
             // Channel holder id is empty because we are populating from an API call
-            ChannelHolderId = null;
+            ChannelHolderId = -1;
             YoutubeId = channelResponse.Id.ToString().Trim();
             Title = channelResponse.Snippet.Title.ToString().Trim();
             // The database only holds up to 1000 characters
@@ -57,7 +57,7 @@ namespace YoutubeCollections.ObjectHolders
         {
             if (ColumnExists(reader, "ChannelID"))
             {
-                ChannelHolderId = Convert.ToUInt64(reader["ChannelID"].ToString().Trim());
+                ChannelHolderId = Convert.ToInt32(reader["ChannelID"].ToString().Trim());
             }
 
             if (ColumnExists(reader, "YoutubeID"))

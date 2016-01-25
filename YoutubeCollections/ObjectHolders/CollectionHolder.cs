@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace YoutubeCollections.ObjectHolders
 {
-    public class CollectionHolder : ApiResponseHolder
+    public class CollectionHolder : ObjectHolder
     {
-        public ulong? CollectionHolderId { get; set; }
-        public ulong? OwnerChannelId { get; set; }
+        public int CollectionHolderId { get; set; }
+        public int OwnerChannelId { get; set; }
         public string OwnerYoutubeChannelId { get; set; }
         public string Title { get; set; }
     }

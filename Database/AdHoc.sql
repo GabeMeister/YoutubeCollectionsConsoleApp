@@ -19,3 +19,5 @@ select * from channels where title like '%Jimmy Fallon%';
 select * from videos where youtubeid='Pkm2MlXHo5A';
 
 select * from Collections;
+select * from CollectionItems;
+-- select * from Channels limit 5;
