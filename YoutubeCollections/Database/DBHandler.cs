@@ -255,6 +255,34 @@ namespace YoutubeCollections.ObjectHolders
             throw new NotImplementedException();
         }
 
+        public static bool DoesCollectionExist(int ownerChannelId, string collectionTitle)
+        {
+            bool doesExist = false;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectByChannelIdAndCollectionTitle("count(*)", ownerChannelId, collectionTitle);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    doesExist = true;
+                }
+
+                conn.Close();
+            }
+
+            return doesExist;
+        }
+
+
+        #endregion
+
+        // ============================ COLLECTION ITEMS
+        #region COLLECTION ITEMS
         public static int InsertCollectionItem(int collectionId, int itemChannelId)
         {
             int rowsAffected = 0;
@@ -307,29 +335,6 @@ namespace YoutubeCollections.ObjectHolders
         {
             // TODO
             throw new NotImplementedException();
-        }
-
-        public static bool DoesCollectionExist(int ownerChannelId, string collectionTitle)
-        {
-            bool doesExist = false;
-
-            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
-            {
-                conn.Open();
-
-                string selectSql = SqlBuilder.SelectByChannelIdAndCollectionTitle("count(*)", ownerChannelId, collectionTitle);
-                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
-                int count = Convert.ToInt16(selectCommand.ExecuteScalar());
-
-                if (count > 0)
-                {
-                    doesExist = true;
-                }
-
-                conn.Close();
-            }
-
-            return doesExist;
         }
 
         public static bool DoesCollectionItemExist(int collectionId, int channelId)
