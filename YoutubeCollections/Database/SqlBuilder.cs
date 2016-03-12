@@ -31,7 +31,7 @@ namespace YoutubeCollections.Database
 
         // ============================ CHANNELS
         #region CHANNELS
-        public static string FetchSelectChannelByChannelIdSql(string columns, ulong? channelId)
+        public static string FetchSelectChannelByChannelIdSql(string columns, int channelId)
         {
             return string.Format(@"select {0} from Channels where ChannelID={1};", Sanitize(columns), Sanitize(channelId));
         }
@@ -47,6 +47,15 @@ namespace YoutubeCollections.Database
                 Sanitize(channel.ViewCount),
                 Sanitize(channel.SubscriberCount),
                 Sanitize(channel.VideoCount));
+        }
+
+        public static string FetchSelectAllChannelsByViewCount(string columns)
+        {
+            return string.Format(string.Format(
+                @"select {0} from channels c 
+                inner join videos v on c.channelid=v.channelid 
+                group by c.ChannelID 
+                order by count(*);", columns));
         }
 
 
@@ -128,7 +137,7 @@ namespace YoutubeCollections.Database
 
         // ============================ VIDEOS
         #region VIDEOS
-        public static string SelectVideoByVideoIdSql(string columns, ulong? videoId)
+        public static string SelectVideoByVideoIdSql(string columns, int videoId)
         {
             return string.Format(@"select {0} from Videos where VideoID={1};", Sanitize(columns), Sanitize(videoId));
         }

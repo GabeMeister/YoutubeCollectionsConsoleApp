@@ -13,10 +13,10 @@ select count(*) from subscriptions;
 select count(*) from videos;
 
 
-select * from channels where title like '%Jimmy Fallon%';
+select * from channels where title like '%Vibe%';
 
 
-select * from videos where youtubeid='Pkm2MlXHo5A';
+select * from videos where title like '%AVATARA%';
 
 select * from Collections;
 select * from CollectionItems;

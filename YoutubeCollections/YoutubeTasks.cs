@@ -15,6 +15,7 @@ using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using System.Threading;
 
 
 
@@ -23,6 +24,7 @@ namespace YoutubeCollections
 {
     public class YoutubeTasks
     {
+        private static int taskCount = 0;
         private const int MAX_RESULTS = 50;
         private const string YOUTUBE_LOG_FILE = @"C:\Users\Gabe\Desktop\YTCollections Dump.log";
 
@@ -151,7 +153,7 @@ namespace YoutubeCollections
             foreach(var videoResponse in videos.Items)
             {
                 VideoHolder video = new VideoHolder(videoResponse);
-                //DBHandler.InsertVideo(video);
+                DBHandler.InsertVideo(video);
 
                 Console.WriteLine("{0}: {1}", video.YoutubeChannelId, video.Title);
             }
@@ -438,9 +440,9 @@ namespace YoutubeCollections
 
             int count = 1;
             // API request 1 video
-            foreach(ObjectHolder apiResponse in allYoutubeChannelIds)
+            foreach(ObjectHolder objHolder in allYoutubeChannelIds)
             {
-                ChannelHolder channel = apiResponse as ChannelHolder;
+                ChannelHolder channel = objHolder as ChannelHolder;
 
                 if (!AreUploadsUpToDate(channel.YoutubeId))
                 {
@@ -457,6 +459,27 @@ namespace YoutubeCollections
                 {
                     Console.WriteLine(count++ + ". " + channel.Title + " is up to date!");
                 }
+            }
+        }
+
+        public static async void UpdateChannelUploadsThreaded(string youtubeChannelId)
+        {
+            ChannelHolder channel = DBHandler.RetrieveColumnsFromTableById(typeof(ChannelHolder), "YoutubeID,Title", "Channels", youtubeChannelId) as ChannelHolder;
+
+            if (!AreUploadsUpToDate(channel.YoutubeId))
+            {
+                Console.WriteLine(Interlocked.Increment(ref taskCount) + ". " + channel.Title + " out of date. Fetching latest uploads...");
+
+                using (StreamWriter writer = File.AppendText(YOUTUBE_LOG_FILE))
+                {
+                    writer.WriteLine("Fetching latest uploads for " + channel.Title);
+                }
+
+                await Task.Run(() => FetchMissingChannelUploads(channel.YoutubeId));
+            }
+            else
+            {
+                Console.WriteLine(Interlocked.Increment(ref taskCount) + ". " + channel.Title + " is up to date!");
             }
         }
         
@@ -609,6 +632,40 @@ namespace YoutubeCollections
         public static void DeleteCollectionsData()
         {
             DBHandler.DeleteCollection(1);
+        }
+
+        public static void ThreadedFetchChannelUploads()
+        {
+            Queue<string> allChannelsQueue = new Queue<string>(DBHandler.FetchChannelsSortedByVideos());
+
+            int totalProcs = 10;
+            using (ManualResetEvent resetEvent = new ManualResetEvent(false))
+            {
+                while (allChannelsQueue.Count > 0)
+                {
+                    UpdateChannelUploadsThreaded(allChannelsQueue.Dequeue());
+                }
+
+                resetEvent.WaitOne();
+                
+            }
+            
+
+            
+        }
+
+        public static void UpdateAllVideoInfo()
+        {
+            // TODO: finish
+            Queue<string> allVideosQueue = new Queue<string>(DBHandler.RetrieveColumnFromTable("YoutubeID", "Videos"));
+
+            while(allVideosQueue.Count > 0)
+            {
+                // We do fetches in async threads to speed up the time needed to 
+                
+                
+            }
+
         }
 
     }

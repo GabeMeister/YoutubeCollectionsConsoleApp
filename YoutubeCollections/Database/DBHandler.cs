@@ -100,7 +100,7 @@ namespace YoutubeCollections.ObjectHolders
             {
                 conn.Open();
 
-                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table).Replace(";", " offset 3000;");
+                string selectSql = SqlBuilder.SelectAllSql(columnsToSelect, table);
                 NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
                 NpgsqlDataReader reader = selectCommand.ExecuteReader();
 
@@ -119,6 +119,32 @@ namespace YoutubeCollections.ObjectHolders
             }
 
             return items;
+        }
+
+        public static ObjectHolder RetrieveColumnsFromTableById(Type itemType, string columns, string table, string youtubeId)
+        {
+            ObjectHolder itemSelected = null;
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                string selectSql = SqlBuilder.SelectByIdSql(columns, table, "YoutubeID", youtubeId);
+                NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
+                NpgsqlDataReader reader = selectCommand.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+
+                    ConstructorInfo constructor = itemType.GetConstructor(new[] { typeof(NpgsqlDataReader) });
+                    itemSelected = constructor.Invoke(new object[] { reader }) as ObjectHolder;
+                }
+
+                conn.Close();
+            }
+
+            return itemSelected;
         }
 
         #endregion
@@ -158,6 +184,29 @@ namespace YoutubeCollections.ObjectHolders
             return rowsAffected;
         }
 
+        public static List<string> FetchChannelsSortedByVideos()
+        {
+            List<string> youtubeChannelIds = new List<string>();
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                // Now we actually insert the channel because we know it's not in the database
+                string insertSQL = SqlBuilder.FetchSelectAllChannelsByViewCount("c.YoutubeID");
+                NpgsqlCommand insertCommand = new NpgsqlCommand(insertSQL, conn);
+                NpgsqlDataReader reader = insertCommand.ExecuteReader();
+
+                while(reader.Read())
+                {
+                    youtubeChannelIds.Add(reader["YoutubeID"].ToString().Trim());
+                }
+
+                conn.Close();
+            }
+
+            return youtubeChannelIds;
+        }
          
 
         #endregion

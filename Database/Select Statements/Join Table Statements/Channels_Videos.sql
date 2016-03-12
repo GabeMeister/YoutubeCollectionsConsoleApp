@@ -26,3 +26,8 @@ order by count(*) desc;
 
 
 select * from channels limit 5;
+
+select c.YoutubeID,c.Title,count(*) from channels c 
+                inner join videos v on c.channelid=v.channelid 
+                group by c.ChannelID 
+                order by count(*);
