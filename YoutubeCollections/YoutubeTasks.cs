@@ -541,7 +541,7 @@ namespace YoutubeCollections
                 do
                 {
                     // Fetch 5 videos at a time
-                    PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, pageToken, "snippet", 5);
+                    PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, pageToken, "snippet", 50);
                     pageToken = response.NextPageToken;
 
                     foreach (PlaylistItem item in response.Items)

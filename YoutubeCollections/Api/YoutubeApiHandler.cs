@@ -61,14 +61,31 @@ namespace YoutubeCollections
 
         public static PlaylistItemListResponse FetchVideosByPlaylist(string youtubeId, string pageToken, string part, int numResults)
         {
-            var ytService = FetchYoutubeService();
+            bool isSuccess = true;
+            PlaylistItemListResponse playlistResponse = null;
 
-            PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
-            playlistRequest.MaxResults = numResults;
-            playlistRequest.PlaylistId = youtubeId;
-            playlistRequest.PageToken = pageToken;
+            do
+            {
+                try
+                {
+                    var ytService = FetchYoutubeService();
 
-            return playlistRequest.Execute();
+                    PlaylistItemsResource.ListRequest playlistRequest = ytService.PlaylistItems.List(part);
+                    playlistRequest.MaxResults = numResults;
+                    playlistRequest.PlaylistId = youtubeId;
+                    playlistRequest.PageToken = pageToken;
+
+                    playlistResponse = playlistRequest.Execute();
+                    isSuccess = true;
+                }
+                catch (Exception e)
+                {
+                    isSuccess = false;
+                }
+            }
+            while (isSuccess != true);
+            
+            return playlistResponse;
         }
 
         public static VideoListResponse FetchVideoById(string youtubeId, string part)
