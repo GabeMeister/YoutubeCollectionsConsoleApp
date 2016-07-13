@@ -3,7 +3,7 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 
-namespace YoutubeCollections
+namespace YoutubeCollections.Api
 {
     public class YoutubeApiHandler
     {

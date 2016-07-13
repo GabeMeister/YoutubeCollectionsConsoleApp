@@ -1,13 +1,13 @@
-﻿using Npgsql;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using YoutubeCollections.Database;
 using System.Diagnostics;
+using System.Reflection;
+using Npgsql;
+using YoutubeCollections.ObjectHolders;
 
-namespace YoutubeCollections.ObjectHolders
+namespace YoutubeCollections.Database
 {
-    public class DBHandler
+    public class DbHandler
     {
         public static string DatabaseConnStr = @"Server=127.0.0.1;Port=5432;User Id=postgres;Password=4321;Database=YoutubeCollections";
 
