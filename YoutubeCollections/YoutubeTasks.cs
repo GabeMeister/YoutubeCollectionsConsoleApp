@@ -1,23 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using System.IO;
-using Npgsql;
 using YoutubeCollections.ObjectHolders;
-using YoutubeCollections.Database;
-
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Upload;
-using Google.Apis.Util.Store;
-using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System.Threading;
-
-
 
 
 namespace YoutubeCollections
@@ -25,8 +13,83 @@ namespace YoutubeCollections
     public class YoutubeTasks
     {
         private static int taskCount = 0;
-        private const int MAX_RESULTS = 50;
         private const string YOUTUBE_LOG_FILE = @"C:\Users\Gabe\Desktop\YTCollections Dump.log";
+
+        public static void ThreadedFetchExistingChannelUploads()
+        {
+            List<string> allChannels = DBHandler.FetchChannelsSortedByVideos();
+
+            Parallel.For(0, allChannels.Count, i =>
+            {
+                FetchChannelUploads(allChannels[i]);
+            });
+
+        }
+
+        public static void FetchMissingChannelUploads(string youtubeChannelId)
+        {
+            // Check if completely new channel
+            if (!DBHandler.DoesIdExist("Channels", "YoutubeID", youtubeChannelId))
+            {
+                // Channel doesn't exist. Throw an exception because this function will only
+                // query for videos 5 at a time
+                throw new Exception("FetchMissingChannelUploads(): Unrecognized youtube channel id: " + youtubeChannelId);
+            }
+
+            // Fetch actual channel id from youtube channel id
+            int channelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", youtubeChannelId);
+
+            // Check if completely new channel with no videos written to database
+            if (!DBHandler.DoesIdExist("Videos", "ChannelID", channelId))
+            {
+                // For channels with no videos previously written to database, we just fetch
+                // all the channel uploads
+                FetchChannelUploads(youtubeChannelId);
+            }
+            else
+            {
+                // For channels that have most of their videos inserted but the channel has a few more videos, 
+                // we execute this code
+
+                bool upToDate = false;
+                string pageToken = string.Empty;
+                int newVideoCount = 0;
+
+                // Get the uploads playlist
+                string uploadPlaylistId = DBHandler.RetrieveColumnBySingleCondition("UploadPlaylist", "Channels", "YoutubeID", youtubeChannelId);
+
+                do
+                {
+                    // Fetch 5 videos at a time
+                    PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, pageToken, "snippet", 50);
+                    pageToken = response.NextPageToken;
+
+                    foreach (PlaylistItem item in response.Items)
+                    {
+                        string youtubeVideoId = item.Snippet.ResourceId.VideoId;
+
+                        // Check if video is in database
+                        if (!DBHandler.DoesIdExist("Videos", "YoutubeID", youtubeVideoId))
+                        {
+                            // Perform api call and write to database
+                            FetchVideoInfo(youtubeVideoId);
+                            newVideoCount++;
+                        }
+                        else
+                        {
+                            upToDate = true;
+                            break;
+                        }
+                    }
+
+                }
+                while (!upToDate && pageToken != null);
+
+                Console.WriteLine("Found " + newVideoCount + " new video(s)");
+            }
+
+
+        }
 
         public static void FetchAllUploadsForAllChannelSubscriptions(string youtubeId)
         {
@@ -56,39 +119,42 @@ namespace YoutubeCollections
 
         public static void FetchChannelUploads(string youtubeId)
         {
+            // TODO: split up the fetch/insert channel code from the update existing uploads code
             int vidCount = 0;
             ChannelHolder channel = InsertChannelIntoDatabaseFromApiResponse(youtubeId);
-            Console.WriteLine("************* " + channel.Title + " | " + channel.YoutubeId + " *************");
+            if (channel == null)
+            {
+                // The channel holder will be null if the channel doesn't exist anymore. The channel could
+                // have been terminated because of copyright infringement, etc.
+                return;
+            }
+
+            Console.WriteLine("INSERTING {0} | {1}", channel.Title, channel.YoutubeId);
 
             string nextPageToken = string.Empty;
             string uploadsPlaylistId = channel.UploadPlaylist;
-            PlaylistItemListResponse searchListResponse;
 
             do
             {
                 try
                 {
-                    searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
+                    var searchListResponse = YoutubeApiHandler.FetchVideosByPlaylist(uploadsPlaylistId, nextPageToken, "snippet");
                     vidCount += searchListResponse.Items.Count;
                     nextPageToken = searchListResponse.NextPageToken;
 
-                    if (searchListResponse != null)
+                    var videoIds = "";
+
+                    if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
                     {
-                        string videoIds = string.Empty;
-
-                        if (searchListResponse.Items != null && searchListResponse.Items.Count > 0)
+                        foreach (var searchResult in searchListResponse.Items)
                         {
-                            foreach (var searchResult in searchListResponse.Items)
-                            {
-                                videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
-                            }
-
-                            // Remove last comma
-                            videoIds = videoIds.Substring(0, videoIds.Length - 1);
-
-                            FetchVideoInfo(videoIds);
+                            videoIds += searchResult.Snippet.ResourceId.VideoId + ",";
                         }
 
+                        // Remove last comma
+                        videoIds = videoIds.Substring(0, videoIds.Length - 1);
+
+                        FetchVideoInfo(videoIds);
                     }
                 }
                 catch (Exception e)
@@ -160,203 +226,6 @@ namespace YoutubeCollections
 
             //Console.Write("█");
             
-        }
-
-        public static void FetchChannelUploadsFromStream(StreamReader reader)
-        {
-            using (reader)
-            {
-                string line;
-                while((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith("#") || string.IsNullOrEmpty(line))
-                    {
-                        continue;
-                    }
-
-                    string[] tokens = line.Split('\t');
-                    string channelId = tokens[0];
-                    string youtubeId = tokens[1];
-                    string title = tokens[2];
-
-                    FetchChannelUploads(youtubeId);
-
-                }
-            }
-        }
-
-        public static void WriteAllChannelIdsToStream(StreamWriter writer)
-        {
-            using (writer)
-            {
-                string selectAllChannelsSql = SqlBuilder.SelectAllSql("ChannelID,YoutubeID,Title", "Channels");
-
-                using (NpgsqlConnection conn = new NpgsqlConnection(DBHandler.DatabaseConnStr))
-                {
-                    conn.Open();
-                    
-                    NpgsqlCommand command = new NpgsqlCommand(selectAllChannelsSql, conn);
-                    NpgsqlDataReader reader = command.ExecuteReader();
-                    
-                    while(reader.Read())
-                    {
-                        string channelId = reader["ChannelID"].ToString().Trim();
-                        string youtubeId = reader["YoutubeID"].ToString().Trim();
-                        string title = reader["Title"].ToString().Trim();
-                        writer.WriteLine("{0}\t{1}\t{2}", channelId, youtubeId, title);
-                    }
-
-                    conn.Close();
-                }
-
-                
-            }
-        }
-
-        public static void AddPublishedAtTimeStamps()
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(DBHandler.DatabaseConnStr))
-                {
-                    conn.Open();
-
-                    // We check if the same youtube channel id has already been inserted
-                    string selectSql = "select YoutubeID from videos where publishedAt is NULL;";
-                    NpgsqlCommand selectCommand = new NpgsqlCommand(selectSql, conn);
-                    NpgsqlDataReader reader = selectCommand.ExecuteReader();
-
-                    List<string> youtubeIds = new List<string>();
-                    VideoListResponse videoResponse = null;
-
-                    while(reader.Read())
-                    {
-                        youtubeIds.Add(reader["YoutubeId"].ToString());
-                    }
-
-                    reader.Close();
-
-                    int count = 0;
-                    int totalCount = 0;
-                    string videoList = string.Empty;
-                    // API call with each video id
-                    foreach(string youtubeId in youtubeIds)
-                    {
-                        if (count == 49)
-                        {
-                            // To make it 50
-                            videoList += youtubeId.Trim();
-                            count++;
-
-                            videoResponse = YoutubeApiHandler.FetchVideoById(videoList, "snippet");
-
-                            foreach(Video video in videoResponse.Items)
-                            {
-                                DateTime? publishedAt = video.Snippet.PublishedAt;
-
-                                string udpateSql = string.Format("update videos set PublishedAt='{0}' where YoutubeID='{1}';", publishedAt.Value.ToString("yyyy-MM-dd HH:MM:ss").Trim(), video.Id.Trim());
-
-                                NpgsqlCommand updateCommand = new NpgsqlCommand(udpateSql, conn);
-                                int rowsAffected = updateCommand.ExecuteNonQuery();
-
-                                if (rowsAffected < 1)
-                                {
-                                    throw new Exception("Video update didn't complete correctly.");
-                                }
-                            }
-
-
-                            
-                            videoList = string.Empty;
-                            totalCount += count;
-                            Console.WriteLine("Updated {0} videos", totalCount);
-                            count = 0;
-                        }
-                        else
-                        {
-                            videoList += youtubeId.Trim() + ",";
-                        }
-
-                        count++;
-                    }
-
-
-
-                    videoResponse = YoutubeApiHandler.FetchVideoById(videoList.TrimEnd(','), "snippet");
-
-                    foreach (Video video in videoResponse.Items)
-                    {
-                        DateTime? publishedAt = video.Snippet.PublishedAt;
-
-                        string udpateSql = string.Format("update videos set PublishedAt='{0}' where YoutubeID='{1}';", publishedAt.Value.ToString("yyyy-MM-dd HH:MM:ss").Trim(), video.Id.Trim());
-
-                        NpgsqlCommand updateCommand = new NpgsqlCommand(udpateSql, conn);
-                        int rowsAffected = updateCommand.ExecuteNonQuery();
-
-                        if (rowsAffected < 1)
-                        {
-                            throw new Exception("Video update didn't complete correctly.");
-                        }
-                    }
-
-                    videoList = string.Empty;
-                    totalCount += count;
-                    Console.WriteLine("Updated {0} videos", totalCount);
-                    count = 0;
-
-                    conn.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error with video insert: " + e.Message);
-            }
-        }
-
-        public static void BuildThumbnailCollage(string youtubeId)
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(DBHandler.DatabaseConnStr))
-                {
-                    conn.Open();
-
-                    // We check if the same youtube channel id has already been inserted
-                    string selectByChannelSql = "select v.title, v.thumbnail, v.publishedat, c.title from videos v inner join channels c on c.channelid=v.channelid where c.YoutubeID='{0}' order by publishedat;";
-
-                    NpgsqlCommand selectCommand = new NpgsqlCommand(string.Format(selectByChannelSql, youtubeId), conn);
-                    NpgsqlDataReader reader = selectCommand.ExecuteReader();
-
-                    List<string> thumbnails = new List<string>();
-                    string imgTagFormat = "<img src=\"{0}\" height=\"50\" width=\"80\">";
-
-                    while (reader.Read())
-                    {
-                        string thumbnail = reader["Thumbnail"].ToString().Trim();
-                        Console.WriteLine("Added " + thumbnail);
-                        thumbnails.Add(string.Format(imgTagFormat, thumbnail));
-                    }
-
-                    reader.Close();
-
-
-                    using (StreamWriter writer = new StreamWriter(@"C:\Users\Gabe\Desktop\test.html"))
-                    {
-                        foreach (string image in thumbnails)
-                        {
-                            writer.WriteLine(image);
-                        }
-                    }
-
-
-
-                    conn.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error with video insert: " + e.Message);
-            }
         }
 
         public static void RecordChannelSubscriptions(string subscriberYoutubeId)
@@ -500,159 +369,18 @@ namespace YoutubeCollections
                 string latestVideoId = response.Items[0].Snippet.ResourceId.VideoId;
 
                 // Query database for latest video
-                status = DBHandler.DoesItemExist("Videos", "YoutubeID", latestVideoId);
+                status = DBHandler.DoesIdExist("Videos", "YoutubeID", latestVideoId);
             }
 
             return status;
         }
 
-        public static void FetchMissingChannelUploads(string youtubeChannelId)
-        {
-            // Check if completely new channel
-            if (!DBHandler.DoesItemExist("Channels", "YoutubeID", youtubeChannelId))
-            {
-                // Channel doesn't exist. Throw an exception because this function will only
-                // query for videos 5 at a time
-                throw new Exception("FetchMissingChannelUploads(): Unrecognized youtube channel id: " + youtubeChannelId);
-            }
-
-            // Fetch actual channel id from youtube channel id
-            int channelId = DBHandler.RetrieveIdFromYoutubeId("ChannelID", "Channels", youtubeChannelId);
-
-            // Check if completely new channel with no videos written to database
-            if (!DBHandler.DoesItemExist("Videos", "ChannelID", channelId))
-            {
-                // For channels with no videos previously written to database, we just fetch
-                // all the channel uploads
-                FetchChannelUploads(youtubeChannelId);
-            }
-            else
-            {
-                // For channels that have most of their videos inserted but the channel has a few more videos, 
-                // we execute this code
-
-                bool upToDate = false;
-                string pageToken = string.Empty;
-                int newVideoCount = 0;
-
-                // Get the uploads playlist
-                string uploadPlaylistId = DBHandler.RetrieveColumnBySingleCondition("UploadPlaylist", "Channels", "YoutubeID", youtubeChannelId);
-
-                do
-                {
-                    // Fetch 5 videos at a time
-                    PlaylistItemListResponse response = YoutubeApiHandler.FetchVideosByPlaylist(uploadPlaylistId, pageToken, "snippet", 50);
-                    pageToken = response.NextPageToken;
-
-                    foreach (PlaylistItem item in response.Items)
-                    {
-                        string youtubeVideoId = item.Snippet.ResourceId.VideoId;
-
-                        // Check if video is in database
-                        if (!DBHandler.DoesItemExist("Videos", "YoutubeID", youtubeVideoId))
-                        {
-                            // Perform api call and write to database
-                            FetchVideoInfo(youtubeVideoId);
-                            newVideoCount++;
-                        }
-                        else
-                        {
-                            upToDate = true;
-                            break;
-                        }
-                    }
-
-                }
-                while (!upToDate && pageToken != null);
-
-                Console.WriteLine("Found " + newVideoCount + " new video(s)");
-            }
-
-            
-        }
-
-        public static void FetchAllSubscriptionsToAllChannels()
-        {
-            int count = 1;
-            ChannelHolder channel = null;
-
-            // Get all channel youtube ids from database
-            List<ObjectHolder> allYoutubeChannelIds = DBHandler.RetrieveColumnsFromTable(typeof(ChannelHolder), "YoutubeID,Title", "Channels");
-
-            try
-            {
-                // API request 1 video
-                foreach (ObjectHolder apiResponse in allYoutubeChannelIds)
-                {
-                    channel = apiResponse as ChannelHolder;
-
-                    if (YoutubeApiHandler.DoesChannelHavePublicSubscriptions(channel.YoutubeId))
-                    {
-                        Console.WriteLine(count++ + ". Fetching subscriptions for " + channel.Title);
-                        RecordChannelSubscriptions(channel.YoutubeId);
-                    }
-                    else
-                    {
-                        count++;
-                    }
-                }
-            }
-            catch(Exception)
-            {
-                Console.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
-
-                using (StreamWriter writer = File.AppendText(YOUTUBE_LOG_FILE))
-                {
-                    writer.WriteLine(DateTime.Now + ": Program crashed on #{0}: {1}", count, channel.Title);
-                }
-            }
-            
-
-            // Check if channel has public subscriptions
-
-            // Record subscriptions of channel to database
-        }
-
-        public static void InsertCollectionsData()
-        {
-            //CollectionHolder collection = new CollectionHolder();
-            //collection.OwnerChannelId = 117;
-            //collection.Title = "Funny";
-
-            //DBHandler.InsertCollection(collection);
+        
 
 
-            CollectionItemHolder collectionItem = new CollectionItemHolder();
-            collectionItem.CollectionId = 1;
-            collectionItem.ItemChannelId = 76;
 
-            DBHandler.InsertCollectionItem(collectionItem);
-        }
 
-        public static void DeleteCollectionsData()
-        {
-            DBHandler.DeleteCollection(1);
-        }
-
-        public static void ThreadedFetchChannelUploads()
-        {
-            Queue<string> allChannelsQueue = new Queue<string>(DBHandler.FetchChannelsSortedByVideos());
-
-            int totalProcs = 10;
-            using (ManualResetEvent resetEvent = new ManualResetEvent(false))
-            {
-                while (allChannelsQueue.Count > 0)
-                {
-                    UpdateChannelUploadsThreaded(allChannelsQueue.Dequeue());
-                }
-
-                resetEvent.WaitOne();
-                
-            }
-            
-
-            
-        }
+        
 
         public static void UpdateAllVideoInfo()
         {
@@ -666,6 +394,19 @@ namespace YoutubeCollections
                 
             }
 
+        }
+
+        public void MarkVideosDownloadedOrNot()
+        {
+            List<int> allChannelIds = DBHandler.RetrieveColumnFromTable("ChannelID", "Channels").Select(x => int.Parse(x)).ToList();
+
+            foreach (int channelId in allChannelIds)
+            {
+                bool areVideosPresent = DBHandler.DoesIdExist("Videos", "ChannelID", channelId);
+                string channelName = DBHandler.RetrieveColumnBySingleCondition("Title", "Channels", "ChannelID", channelId.ToString());
+                DBHandler.SetAreVideosLoadedForChannel(channelId, areVideosPresent);
+                Logger.Instance.Log(string.Format("{0}: {1}", channelName, areVideosPresent ? "yes" : "no"));
+            }
         }
 
     }

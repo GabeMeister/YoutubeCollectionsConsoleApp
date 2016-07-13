@@ -1,18 +1,4 @@
-﻿/*
-*/
-using System;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Text;
-
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Upload;
-using Google.Apis.Util.Store;
-using Google.Apis.YouTube.v3;
-using Google.Apis.YouTube.v3.Data;
+﻿using System;
 
 
 namespace YoutubeCollections
@@ -54,12 +40,12 @@ namespace YoutubeCollections
 
 
                 //YoutubeTasks.FetchMissingChannelUploads(myChannel);
-                YoutubeTasks.UpdateAllMissingChannelUploads();
+                //YoutubeTasks.UpdateAllMissingChannelUploads();
                 //YoutubeTasks.FetchAllSubscriptionsToAllChannels();
                 //YoutubeTasks.InsertCollectionsData();
                 //YoutubeTasks.DeleteCollectionsData();
                 //YoutubeTasks.UpdateAllVideoInfo();
-                //YoutubeTasks.ThreadedFetchChannelUploads();
+                YoutubeTasks.ThreadedFetchExistingChannelUploads();
 
                 
                 
