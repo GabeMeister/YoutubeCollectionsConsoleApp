@@ -7,9 +7,9 @@ namespace YoutubeCollections.ObjectHolders
 {
     public class VideoHolder : ObjectHolder
     {
-        public ulong? VideoHolderId { get; set; }
+        public int VideoHolderId { get; set; }
         public string YoutubeId { get; set; }
-        public ulong? ChannelId { get; set; }
+        public int ChannelId { get; set; }
         public string YoutubeChannelId { get; set; }
         public string Title { get; set; }
         public string Thumbnail { get; set; }
@@ -21,11 +21,11 @@ namespace YoutubeCollections.ObjectHolders
         public VideoHolder()
         {
             VideoHolderId = 0;
-            YoutubeId = string.Empty;
+            YoutubeId = "";
             ChannelId = 0;
-            Title = string.Empty;
-            Thumbnail = string.Empty;
-            Duration = string.Empty;
+            Title = "";
+            Thumbnail = "";
+            Duration = "";
             ViewCount = 0;
             PublishedAt = null;
         }
@@ -34,12 +34,12 @@ namespace YoutubeCollections.ObjectHolders
         {
             // Can't assign the actual id because we are populating from an API response
             VideoHolderId = 0;
-            YoutubeId = videoResponse.Id.ToString().Trim();
+            YoutubeId = videoResponse.Id.Trim();
             // Can't assign the actual channel id because we are populating from an API response
             ChannelId = 0;
-            YoutubeChannelId = videoResponse.Snippet.ChannelId.ToString().Trim();
-            Title = videoResponse.Snippet.Title.ToString().Trim();
-            Thumbnail = videoResponse.Snippet.Thumbnails.Medium.Url.ToString().Trim();
+            YoutubeChannelId = videoResponse.Snippet.ChannelId.Trim();
+            Title = videoResponse.Snippet.Title.Trim();
+            Thumbnail = videoResponse.Snippet.Thumbnails.Medium.Url.Trim();
             // We don't want the ISO format, "PT2m34s". We want the Timespan format: "00:02:34"
             Duration = XmlConvert.ToTimeSpan(videoResponse.ContentDetails.Duration).ToString().Trim();
             ViewCount = videoResponse.Statistics.ViewCount;
@@ -51,7 +51,7 @@ namespace YoutubeCollections.ObjectHolders
         {
             if (ColumnExists(reader, "VideoID"))
             {
-                VideoHolderId = Convert.ToUInt64(reader["VideoID"].ToString().Trim());
+                VideoHolderId = Convert.ToInt32(reader["VideoID"].ToString().Trim());
             }
 
             if (ColumnExists(reader, "YoutubeID"))
@@ -61,7 +61,7 @@ namespace YoutubeCollections.ObjectHolders
 
             if (ColumnExists(reader, "ChannelId"))
             {
-                ChannelId = Convert.ToUInt64(reader["ChannelId"].ToString().Trim());
+                ChannelId = Convert.ToInt32(reader["ChannelId"].ToString().Trim());
             }
 
             if (ColumnExists(reader, "Title"))
@@ -88,14 +88,6 @@ namespace YoutubeCollections.ObjectHolders
             {
                 PublishedAt = DateTime.Parse(reader["PublishedAt"].ToString().Trim());
             }
-            
-            
-            
-            
-            
-            
-            
-            
             
         }
         

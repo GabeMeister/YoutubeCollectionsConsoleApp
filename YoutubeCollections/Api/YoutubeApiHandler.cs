@@ -80,19 +80,17 @@ namespace YoutubeCollections.Api
             return playlistResponse;
         }
 
-        public static VideoListResponse FetchVideoById(string youtubeId, string part)
+        public static VideoListResponse FetchVideosByIds(string youtubeIds, string part)
         {
             var ytService = FetchYoutubeService();
 
             VideosResource.ListRequest videoRequest = ytService.Videos.List(part);
             videoRequest.MaxResults = MAX_RESULTS;
-            videoRequest.Id = youtubeId;
+            videoRequest.Id = youtubeIds;
 
             return videoRequest.Execute();
         }
         
-
-
         public static bool DoesChannelHavePublicSubscriptions(string youtubeId)
         {
             bool isAllowed = true;

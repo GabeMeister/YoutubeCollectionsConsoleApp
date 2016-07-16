@@ -20,11 +20,11 @@ namespace YoutubeCollections.ObjectHolders
         public ChannelHolder()
         {
             ChannelHolderId = -1;
-            YoutubeId = string.Empty;
-            Title = string.Empty;
-            Description = string.Empty;
-            UploadPlaylist = string.Empty;
-            Thumbnail = string.Empty;
+            YoutubeId = "";
+            Title = "";
+            Description = "";
+            UploadPlaylist = "";
+            Thumbnail = "";
             ViewCount = 0;
             SubscriberCount = 0;
             VideoCount = 0;
