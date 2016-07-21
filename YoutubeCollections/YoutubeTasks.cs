@@ -63,7 +63,25 @@ namespace YoutubeCollections
             DbHandler.InsertChannel(channel);
         }
 
-        public static void ThreadedFetchChannelsToDownloadUploads()
+        public static void ThreadedFetchUploadsForChannelsInCollections(string logFile)
+        {
+            List<int> allChannelsToDownloadIds = DbHandler.SelectChannelsIdsFoundInCollections();
+
+#if DEBUG
+            int maxIndex = 2;
+#else
+            int maxIndex = allChannelsToDownloadIds.Count - 1;
+#endif
+
+            var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+            Parallel.For(0, maxIndex, options, i =>
+            {
+                DbHandler.DeleteChannelToDownload(allChannelsToDownloadIds[i]);
+                FetchNewUploadsForChannel(allChannelsToDownloadIds[i], logFile);
+            });
+        }
+
+        public static void ThreadedFetchChannelsToDownloadUploads(string logFile)
         {
             List<int> allChannelsToDownloadIds = DbHandler.SelectChannelsToDownloadIds();
 
@@ -77,12 +95,12 @@ namespace YoutubeCollections
             Parallel.For(0, maxIndex, options, i =>
             {
                 DbHandler.DeleteChannelToDownload(allChannelsToDownloadIds[i]);
-                FetchNewUploadsForChannel(allChannelsToDownloadIds[i]);
+                FetchNewUploadsForChannel(allChannelsToDownloadIds[i], logFile);
             });
             
         }
 
-        public static void ThreadedFetchNewUploadsForExistingChannels()
+        public static void ThreadedFetchNewUploadsForAllChannels(string logFile)
         {
             List<int> allChannels = DbHandler.SelectAllChannelIds();
 
@@ -95,11 +113,11 @@ namespace YoutubeCollections
             var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
             Parallel.For(0, maxIndex, options, i =>
             {
-                FetchNewUploadsForChannel(allChannels[i]);
+                FetchNewUploadsForChannel(allChannels[i], logFile);
             });
         }
 
-        public static void FetchNewUploadsForChannel(int channelId)
+        public static void FetchNewUploadsForChannel(int channelId, string logFile)
         {
             // The channel id needs to already be in the database for us to fetch it's uploads
             if (!DbHandler.DoesIdExist("Channels", "ChannelID", channelId))
@@ -150,8 +168,7 @@ namespace YoutubeCollections
                         }
                         else
                         {
-                            Util.PrintAndLog(string.Format("Notice: No uploads found for {0} ({1})", channel.Title, channel.YoutubeId),
-                                LogFiles.Instance.ChannelFetchesLogFile);
+                            Util.PrintAndLog(string.Format("Notice: No uploads found for {0} ({1})", channel.Title, channel.YoutubeId), logFile);
                         }
 
                         isSuccess = true;
@@ -159,8 +176,8 @@ namespace YoutubeCollections
                     catch (Exception)
                     {
                         attempts++;
-                        Util.PrintAndLog(string.Format("Error: Exception on {0} ({1}) with {2} as page token. Attempt #{3}", channel.Title, channel.YoutubeId, nextPageToken, attempts),
-                            LogFiles.Instance.ChannelFetchesLogFile);
+                        Util.PrintAndLog(string.Format("Error: Exception on {0} ({1}) with {2} as page token. Attempt #{3}", 
+                            channel.Title, channel.YoutubeId, nextPageToken, attempts), logFile);
                     }
                 }
             }
@@ -189,7 +206,7 @@ namespace YoutubeCollections
                 stopWatch.Stop();
 
                 Util.PrintAndLog(string.Format("ChannelFetch: Title={0},VidCount={1},TimeToComplete={2}",
-                    channel.Title.Replace(",", ""), updatedChannelInfo.VideoCount, stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
+                    channel.Title.Replace(",", ""), videoInfoList.Count, stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
                     LogFiles.Instance.ChannelFetchesLogFile);
             }
             else

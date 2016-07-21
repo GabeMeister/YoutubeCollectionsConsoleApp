@@ -73,6 +73,31 @@ namespace YoutubeCollections.Database
             return value;
         }
 
+        public static int SelectIdFromYoutubeId(string idColumnToSelect, string table, string youtubeId)
+        {
+            int id = -1;
+
+            using (var conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                var command = conn.CreateCommand();
+                command.CommandText = string.Format("select {0} from {1} where YoutubeID=@YoutubeID limit 1;", idColumnToSelect, table);
+                command.Parameters.AddWithValue("@YoutubeID", youtubeId);
+
+                var reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    id = Convert.ToInt32(reader[idColumnToSelect].ToString().Trim());
+                }
+
+                conn.Close();
+            }
+
+            return id;
+        }
+
         #endregion
 
         // ============================ CHANNELS
@@ -138,7 +163,7 @@ namespace YoutubeCollections.Database
                 conn.Open();
 
                 var command = conn.CreateCommand();
-                command.CommandText = "select ChannelID from Channels where YoutubeID=@YoutubeID;";
+                command.CommandText = "select ChannelID from Channels where YoutubeID=@YoutubeID limit 1;";
                 command.Parameters.AddWithValue("@YoutubeID", youtubeId);
 
                 var reader = command.ExecuteReader();
@@ -321,6 +346,32 @@ namespace YoutubeCollections.Database
                 }
             }
 
+        }
+
+        public static List<int> SelectChannelsIdsFoundInCollections()
+        {
+            var channelIds = new List<int>();
+
+            using (var conn = new NpgsqlConnection(DatabaseConnStr))
+            {
+                conn.Open();
+
+                var command = conn.CreateCommand();
+                command.CommandText = @"select ItemChannelID from CollectionItems
+                                        group by ItemChannelID
+                                        order by ItemChannelID;";
+
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    int channelId = Convert.ToInt32(reader["ItemChannelID"].ToString().Trim());
+                    channelIds.Add(channelId);
+                }
+
+                conn.Close();
+            }
+
+            return channelIds;
         }
 
         public static List<int> SelectChannelsToDownloadIds()
@@ -1067,7 +1118,7 @@ namespace YoutubeCollections.Database
                     conn.Close();
                 }
 
-                Util.Print(video.Title);
+                //Util.Print(video.Title);
             }
 
         }
@@ -1125,15 +1176,31 @@ namespace YoutubeCollections.Database
         {
             if (DoesIdExist("Videos", "YoutubeID", youtubeId))
             {
+                int videoId = SelectIdFromYoutubeId("VideoID", "Videos", youtubeId);
+
+                // First we need to delete any references to this id from the WatchedVideos table
                 using (var conn = new NpgsqlConnection(DatabaseConnStr))
                 {
                     conn.Open();
 
                     var command = conn.CreateCommand();
-                    command.CommandText = "delete from Videos where YoutubeID=@YoutubeID;";
-                    command.Parameters.AddWithValue("@YoutubeID", youtubeId);
+                    command.CommandText = "delete from WatchedVideos where VideoID=@VideoID;";
+                    command.Parameters.AddWithValue("@VideoID", videoId);
 
-                    // The user may have no videos, so returning no rows affected is ok
+                    command.ExecuteNonQuery();
+
+                    conn.Close();
+                }
+
+                // Then we can actually delete the video
+                using (var conn = new NpgsqlConnection(DatabaseConnStr))
+                {
+                    conn.Open();
+
+                    var command = conn.CreateCommand();
+                    command.CommandText = "delete from Videos where VideoID=@VideoID;";
+                    command.Parameters.AddWithValue("@VideoID", videoId);
+
                     command.ExecuteNonQuery();
 
                     conn.Close();

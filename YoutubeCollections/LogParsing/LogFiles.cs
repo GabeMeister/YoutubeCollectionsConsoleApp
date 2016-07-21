@@ -10,8 +10,9 @@ namespace YoutubeCollections.LogParsing
         public string DefaultLogFile;
         public string ChannelFetchesLogFile;
         public string ChannelFetchesReportFile;
+        public string ChannelsToDownloadFile;
         public string VideoInfoFetchesLogFile;
-
+        
         private static readonly object _padLock = new object();
 
         private LogFiles()
@@ -34,6 +35,9 @@ namespace YoutubeCollections.LogParsing
 
             VideoInfoFetchesLogFile = LogFilesFolder + @"\VideoInfoFetches.log";
             File.WriteAllText(VideoInfoFetchesLogFile, "");
+
+            ChannelsToDownloadFile = LogFilesFolder + @"\ChannelsToDownload.log";
+            File.WriteAllText(ChannelsToDownloadFile, "");
 
         }
 
