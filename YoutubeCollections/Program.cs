@@ -11,7 +11,8 @@ namespace YoutubeCollections
 
             try
             {
-                FetchAllUploadsForChannelsInCollections();
+                //FetchAllUploadsForChannelsInCollections();
+                FetchAllChannelsToDownloadUploads();
             }
             catch (AggregateException ex)
             {
@@ -68,12 +69,12 @@ namespace YoutubeCollections
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            Util.PrintAndLog("StartTask: *** Fetching uploads for all channels ***", LogFiles.Instance.ChannelFetchesLogFile);
+            Util.PrintAndLog("StartTask: *** Fetching uploads for all channels to download ***", LogFiles.Instance.ChannelFetchesLogFile);
 
             YoutubeTasks.ThreadedFetchChannelsToDownloadUploads(LogFiles.Instance.ChannelFetchesLogFile);
 
             stopWatch.Stop();
-            Util.PrintAndLog(string.Format("FinishedTask: Message=Fetched all new uploads for all channels,ElapsedTime={0}", stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
+            Util.PrintAndLog(string.Format("FinishedTask: Message=Fetched all new uploads for all channels to download,ElapsedTime={0}", stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
                 LogFiles.Instance.ChannelFetchesLogFile);
 
             YoutubeTasks.ProcessChannelFetchesLogFile();
