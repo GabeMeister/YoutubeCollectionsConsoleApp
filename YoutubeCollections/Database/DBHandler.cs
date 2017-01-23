@@ -10,11 +10,8 @@ namespace YoutubeCollections.Database
 {
     public class DbHandler
     {
-#if DEBUG
-        public static string DatabaseConnStr = @"Server=127.0.0.1;Port=5432;User Id=postgres;Password=4321;Database=YoutubeCollections";
-#else
-        public static string DatabaseConnStr = @"Server=104.40.49.186;Port=5432;User Id=gabemeister;Password=qwerqwer1234!;Database=youtubecollections";
-#endif
+        public static string DatabaseConnStr = @"Server=104.236.163.200;Port=5432;User Id=gabemeister;Password=qwerQWER1234!;Database=youtubecollections";
+        //public static string DatabaseConnStr = @"Server=104.40.49.186;Port=5432;User Id=gabemeister;Password=qwerqwer1234!;Database=youtubecollections";
 
         // ============================ GENERAL
         #region GENERAL
@@ -1118,7 +1115,8 @@ namespace YoutubeCollections.Database
                     conn.Close();
                 }
 
-                //Util.Print(video.Title);
+                string titleToPrint = video.Title.Length > 10 ? video.Title.Substring(0, 10) : video.Title;
+                Util.Print(titleToPrint);
             }
 
         }

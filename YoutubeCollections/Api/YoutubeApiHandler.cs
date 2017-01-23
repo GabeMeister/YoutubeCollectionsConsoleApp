@@ -48,7 +48,11 @@ namespace YoutubeCollections.Api
             playlistRequest.PlaylistId = youtubeId;
             playlistRequest.PageToken = pageToken;
 
-            return playlistRequest.Execute();
+            //Console.Write("Requesting playlist ({0},{1})... ", youtubeId, pageToken);
+            var request = playlistRequest.Execute();
+            //Console.WriteLine("Got playlist! ({0},{1})...", youtubeId, pageToken);
+
+            return request;
         }
 
         public static PlaylistItemListResponse FetchVideosByPlaylist(string youtubeId, string pageToken, string part, int numResults)
@@ -110,7 +114,8 @@ namespace YoutubeCollections.Api
 
         private static YouTubeService FetchYoutubeService()
         {
-            return new YouTubeService(new BaseClientService.Initializer() { ApiKey = API_KEY });
+            var service = new YouTubeService(new BaseClientService.Initializer() { ApiKey = API_KEY });
+            return service;
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using YoutubeCollections.Api;
+using YoutubeCollections.Database;
 using YoutubeCollections.LogParsing;
 
 namespace YoutubeCollections
@@ -8,10 +10,11 @@ namespace YoutubeCollections
     {
         static void Main(string[] args)
         {
+            Console.WriteLine($"DATABASE CONNECTION STRING: {DbHandler.DatabaseConnStr}");
 
             try
             {
-                //FetchAllUploadsForChannelsInCollections();
+                FetchAllUploadsForChannelsInCollections();
                 FetchAllChannelsToDownloadUploads();
             }
             catch (AggregateException ex)
@@ -23,6 +26,9 @@ namespace YoutubeCollections
             }
 
             Console.WriteLine("Done.");
+            Console.ReadLine();
+
+            //var s = YoutubeApiHandler.FetchUploadsPlaylistByChannel("UU4LVLoBN0xbOb5xJuA0ia9A4", "snippet");
         }
 
         static void FetchAllUploadsForChannelsInCollections()
@@ -37,7 +43,8 @@ namespace YoutubeCollections
             YoutubeTasks.ThreadedFetchUploadsForChannelsInCollections(LogFiles.Instance.ChannelFetchesLogFile);
 
             stopWatch.Stop();
-            Util.PrintAndLog(string.Format("FinishedTask: Message=Fetched all new uploads for channels found in collections,ElapsedTime={0}", stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
+            Util.PrintAndLog(
+                $"FinishedTask: Message=Fetched all new uploads for channels found in collections,ElapsedTime={stopWatch.Elapsed.ToString(@"hh\:mm\:ss")}",
                 LogFiles.Instance.ChannelFetchesLogFile);
 
             YoutubeTasks.ProcessChannelFetchesLogFile();

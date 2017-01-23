@@ -16,6 +16,30 @@ namespace YoutubeCollections
 {
     public class YoutubeTasks
     {
+        private static int ChannelFetchCount
+        {
+            get
+            {
+                object _padlock = new object();
+                lock (_padlock)
+                {
+                    return _channelFetchCount;
+                }
+            }
+
+            set
+            {
+                object _padlock = new object();
+                lock (_padlock)
+                {
+                    _channelFetchCount = value;
+                }
+            }
+        }
+        private static int _channelFetchCount;
+
+        private static int _totalChannelsToFetch;
+
         #region API
 
         public static ChannelHolder FetchChannelInfoFromApi(string youtubeId)
@@ -65,28 +89,32 @@ namespace YoutubeCollections
 
         public static void ThreadedFetchUploadsForChannelsInCollections(string logFile)
         {
-            List<int> allChannelsToDownloadIds = DbHandler.SelectChannelsIdsFoundInCollections();
+            List<int> allChannelIdsInCollections = DbHandler.SelectChannelsIdsFoundInCollections();
+            ChannelFetchCount = 0;
+            _totalChannelsToFetch = allChannelIdsInCollections.Count;
 
 #if DEBUG
-            int maxIndex = 2;
+            int maxIndex = allChannelIdsInCollections.Count - 1;
 #else
             int maxIndex = allChannelsToDownloadIds.Count - 1;
 #endif
 
-            var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+            var options = new ParallelOptions { MaxDegreeOfParallelism = 8 };
             Parallel.For(0, maxIndex, options, i =>
             {
-                DbHandler.DeleteChannelToDownload(allChannelsToDownloadIds[i]);
-                FetchNewUploadsForChannel(allChannelsToDownloadIds[i], logFile);
+                DbHandler.DeleteChannelToDownload(allChannelIdsInCollections[i]);
+                FetchNewUploadsForChannel(allChannelIdsInCollections[i], logFile);
             });
         }
 
         public static void ThreadedFetchChannelsToDownloadUploads(string logFile)
         {
             List<int> allChannelsToDownloadIds = DbHandler.SelectChannelsToDownloadIds();
+            ChannelFetchCount = 0;
+            _totalChannelsToFetch = allChannelsToDownloadIds.Count;
 
 #if DEBUG
-            int maxIndex = 2;
+            int maxIndex = allChannelsToDownloadIds.Count - 1;
 #else
             int maxIndex = allChannelsToDownloadIds.Count - 1;
 #endif
@@ -125,10 +153,12 @@ namespace YoutubeCollections
                 return;
             }
 
-            Stopwatch stopWatch = new Stopwatch();
+            var stopWatch = new Stopwatch();
             stopWatch.Start();
 
             ChannelHolder channel = DbHandler.PopulateChannelHolderFromTable(channelId);
+
+            Console.WriteLine($"{++ChannelFetchCount}/{_totalChannelsToFetch}.) Fetching {channel.Title}...");
 
             string nextPageToken = "";
 
@@ -166,18 +196,16 @@ namespace YoutubeCollections
                             }
 
                         }
-                        else
-                        {
-                            Util.PrintAndLog(string.Format("Notice: No uploads found for {0} ({1})", channel.Title, channel.YoutubeId), logFile);
-                        }
 
                         isSuccess = true;
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         attempts++;
-                        Util.PrintAndLog(string.Format("Error: Exception on {0} ({1}) with {2} as page token. Attempt #{3}", 
-                            channel.Title, channel.YoutubeId, nextPageToken, attempts), logFile);
+                        Util.PrintAndLog(
+                            $"Error: Exception on {channel.Title} (YoutubeID: {channel.YoutubeId}, UploadsPlaylistID: {channel.UploadPlaylist}) with {nextPageToken} as page token. Attempt #{attempts}", logFile);
+                        Util.PrintAndLog($"Message: {e.Message}");
+                        Util.PrintAndLog($"Full Exception: {e.ToString()}");
                     }
                 }
             }
@@ -199,19 +227,16 @@ namespace YoutubeCollections
 
             // Update the channel video count
             ChannelHolder updatedChannelInfo = FetchChannelInfoFromApi(channel.YoutubeId);
+
+            stopWatch.Stop();
+
             if (updatedChannelInfo != null)
             {
                 updatedChannelInfo.ChannelHolderId = channel.ChannelHolderId;
                 DbHandler.UpdateChannelInfo(updatedChannelInfo);
-                stopWatch.Stop();
-
                 Util.PrintAndLog(string.Format("ChannelFetch: Title={0},VidCount={1},TimeToComplete={2}",
                     channel.Title.Replace(",", ""), videoInfoList.Count, stopWatch.Elapsed.ToString(@"hh\:mm\:ss")),
                     LogFiles.Instance.ChannelFetchesLogFile);
-            }
-            else
-            {
-                stopWatch.Stop();
             }
             
         }
